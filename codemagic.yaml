@@ -19,6 +19,10 @@ workflows:
           npx expo prebuild --platform ios --clean || exit 1
           echo "Prebuild finished. Listing ios directory:"
           ls -la ios/ || echo "WARNING: ios directory not found!"
+      - name: Install CocoaPods
+        script: |
+          cd ios
+          pod install || exit 1
       - name: Build iOS IPA (Unsigned)
         script: |
           WORKSPACE=$(ls -d ios/*.xcworkspace | head -n 1)
