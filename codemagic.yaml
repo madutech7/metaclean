@@ -17,10 +17,8 @@ workflows:
         script: npx expo prebuild --platform ios
       - name: Build iOS IPA (Unsigned)
         script: |
-          WORKSPACE=$(find ios -name "*.xcworkspace" -maxdepth 1)
-          SCHEME=$(xcodebuild -list -workspace "$WORKSPACE" -json | jq -r '.workspace.schemes[0]')
-          xcodebuild -workspace "$WORKSPACE" \
-            -scheme "$SCHEME" \
+          xcodebuild -workspace ios/MetaClean.xcworkspace \
+            -scheme MetaClean \
             -configuration Release \
             -sdk iphoneos \
             -archivePath $CM_BUILD_DIR/MetaClean.xcarchive \
@@ -29,11 +27,9 @@ workflows:
       - name: Export Unsigned IPA
         script: |
           mkdir -p $CM_EXPORT_DIR
-          # Find the app bundle inside the archive dynamically
-          APP_PATH=$(find $CM_BUILD_DIR/MetaClean.xcarchive -name "*.app" -type d | head -n 1)
-          cp -R "$APP_PATH" $CM_EXPORT_DIR/
+          cp -R $CM_BUILD_DIR/MetaClean.xcarchive/Products/Applications/MetaClean.app $CM_EXPORT_DIR/MetaClean.app
           cd $CM_EXPORT_DIR
-          zip -r MetaClean.ipa $(basename "$APP_PATH")
+          zip -r MetaClean.ipa MetaClean.app
     artifacts:
       - $CM_EXPORT_DIR/*.ipa
     publishing:
