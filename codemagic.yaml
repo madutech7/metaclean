@@ -14,11 +14,19 @@ workflows:
       - name: Install Expo CLI
         script: npm install -g expo-cli
       - name: Prebuild iOS
-        script: npx expo prebuild --platform ios
+        script: |
+          npx expo prebuild --platform ios --clean --no-interactive || exit 1
+          echo "Prebuild finished. Listing ios directory:"
+          ls -la ios/ || echo "WARNING: ios directory not found!"
       - name: Build iOS IPA (Unsigned)
         script: |
-          # Find the generated workspace regardless of its name
           WORKSPACE=$(ls -d ios/*.xcworkspace | head -n 1)
+          
+          if [ -z "$WORKSPACE" ] || [ ! -e "$WORKSPACE" ]; then
+            echo "ERROR: No .xcworkspace found in ios directory."
+            exit 1
+          fi
+          
           SCHEME=$(basename "$WORKSPACE" .xcworkspace)
           
           echo "Detected Workspace: $WORKSPACE"
