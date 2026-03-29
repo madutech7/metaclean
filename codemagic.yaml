@@ -15,7 +15,8 @@ workflows:
         script: npm install -g expo-cli
       - name: Prebuild iOS
         script: |
-          npx expo prebuild --platform ios --clean --no-interactive || exit 1
+          export CI=true
+          npx expo prebuild --platform ios --clean || exit 1
           echo "Prebuild finished. Listing ios directory:"
           ls -la ios/ || echo "WARNING: ios directory not found!"
       - name: Build iOS IPA (Unsigned)
