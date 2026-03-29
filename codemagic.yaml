@@ -17,19 +17,35 @@ workflows:
         script: npx expo prebuild --platform ios
       - name: Build iOS IPA (Unsigned)
         script: |
-          xcodebuild -workspace ios/MetaClean.xcworkspace \
-            -scheme MetaClean \
+          # Find the generated workspace regardless of its name
+          WORKSPACE=$(ls -d ios/*.xcworkspace | head -n 1)
+          SCHEME=$(basename "$WORKSPACE" .xcworkspace)
+          
+          echo "Detected Workspace: $WORKSPACE"
+          echo "Detected Scheme: $SCHEME"
+          
+          xcodebuild -workspace "$WORKSPACE" \
+            -scheme "$SCHEME" \
             -configuration Release \
             -sdk iphoneos \
-            -archivePath $CM_BUILD_DIR/MetaClean.xcarchive \
+            -archivePath $CM_BUILD_DIR/build.xcarchive \
             CODE_SIGNING_ALLOWED=NO \
-            archive
+            archive || exit 1
+            
       - name: Export Unsigned IPA
         script: |
           mkdir -p $CM_EXPORT_DIR
-          cp -R $CM_BUILD_DIR/MetaClean.xcarchive/Products/Applications/MetaClean.app $CM_EXPORT_DIR/MetaClean.app
+          APP_PATH=$(find $CM_BUILD_DIR/build.xcarchive -name "*.app" -type d | head -n 1)
+          
+          if [ -z "$APP_PATH" ]; then
+            echo "Error: Could not find .app in archive"
+            exit 1
+          fi
+          
+          echo "Found .app at: $APP_PATH"
+          cp -R "$APP_PATH" $CM_EXPORT_DIR/
           cd $CM_EXPORT_DIR
-          zip -r MetaClean.ipa MetaClean.app
+          zip -r MetaClean.ipa $(basename "$APP_PATH")
     artifacts:
       - $CM_EXPORT_DIR/*.ipa
     publishing:
