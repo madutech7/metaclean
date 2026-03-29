@@ -1,0 +1,38 @@
+workflows:
+  expo-ios-workflow:
+    name: MetaClean iOS Build (Unsigned IPA)
+    max_build_duration: 60
+    instance_type: mac_mini_m1
+    environment:
+      node: latest
+      xcode: latest
+      vars:
+        EXPO_APPLE_ID: "votre_email@gmail.com" # Optionnel pour build non-signé
+    scripts:
+      - name: Install dependencies
+        script: npm install
+      - name: Install Expo CLI
+        script: npm install -g expo-cli
+      - name: Prebuild iOS
+        script: npx expo prebuild --platform ios
+      - name: Build iOS IPA (Unsigned)
+        script: |
+          xcodebuild -workspace ios/cleanfiles.xcworkspace \
+            -scheme cleanfiles \
+            -configuration Release \
+            -sdk iphoneos \
+            -archivePath $CM_BUILD_DIR/MetaClean.xcarchive \
+            CODE_SIGNING_ALLOWED=NO \
+            archive
+      - name: Export Unsigned IPA
+        script: |
+          mkdir -p $CM_EXPORT_DIR
+          mv $CM_BUILD_DIR/MetaClean.xcarchive/Products/Applications/MetaClean.app $CM_EXPORT_DIR/MetaClean.app
+          cd $CM_EXPORT_DIR
+          zip -r MetaClean.ipa MetaClean.app
+    artifacts:
+      - $CM_EXPORT_DIR/*.ipa
+    publishing:
+      email:
+        recipients:
+          - madutech0@gmail.com
