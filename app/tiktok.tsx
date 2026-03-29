@@ -42,7 +42,7 @@ const isExpoGo = Constants.executionEnvironment === ExecutionEnvironment.StoreCl
 
 if (!isExpoGo) {
   try {
-    const module = require('ffmpeg-kit-react-native');
+    const module = require('@sheehanmunim/react-native-ffmpeg');
     FFmpegKit = module.FFmpegKit;
     ReturnCode = module.ReturnCode;
   } catch (e) {}

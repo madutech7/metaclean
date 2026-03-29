@@ -50,7 +50,7 @@ const isExpoGo = Constants.executionEnvironment === ExecutionEnvironment.StoreCl
 
 if (!isExpoGo) {
   try {
-    const module = require('ffmpeg-kit-react-native');
+    const module = require('@sheehanmunim/react-native-ffmpeg');
     FFmpegKit = module.FFmpegKit;
     ReturnCode = module.ReturnCode;
   } catch (e) {}
@@ -295,15 +295,15 @@ export default function Index() {
         <View style={styles.topNav}>
           <View>
             <MotiText 
-              from={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
+              from={{ opacity: 0, translateX: -20 }}
+              animate={{ opacity: 1, translateX: 0 }}
               style={styles.navSubtitle}
             >
               PRIVE & SÉCURISÉ
             </MotiText>
             <MotiText 
-              from={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
+              from={{ opacity: 0, translateX: -20 }}
+              animate={{ opacity: 1, translateX: 0 }}
               transition={{ delay: 100 }}
               style={styles.navTitle}
             >
