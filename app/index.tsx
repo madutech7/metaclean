@@ -7,6 +7,9 @@ import {
   Alert,
   Dimensions,
   Platform,
+  Modal,
+  Switch,
+  TouchableOpacity,
   Animated,
   Pressable,
   ActivityIndicator,
@@ -17,7 +20,7 @@ import * as ImagePicker from 'expo-image-picker';
 import * as ImageManipulator from 'expo-image-manipulator';
 import * as MediaLibrary from 'expo-media-library';
 import * as FileSystem from 'expo-file-system';
-import { documentDirectory, cacheDirectory } from 'expo-file-system/legacy';
+import { documentDirectory, cacheDirectory, deleteAsync } from 'expo-file-system/legacy';
 import { StatusBar } from 'expo-status-bar';
 import { BlurView } from 'expo-blur';
 import * as Haptics from 'expo-haptics';
@@ -142,6 +145,7 @@ export default function Index() {
   const router = useRouter();
   const [images, setImages] = useState<ImagePicker.ImagePickerAsset[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const [progress, setProgress] = useState(0);
   const [stats, setStats] = useState<PrivacyStats>({ 
     filesCleaned: 0, 
@@ -158,9 +162,22 @@ export default function Index() {
   const [stripAudio, setStripAudio] = useState(false);
   const [compressVideo, setCompressVideo] = useState(false);
   const [scrambleName, setScrambleName] = useState(true);
+  const [autoDelete, setAutoDelete] = useState(false);
   const [stripAll, setStripAll] = useState(true);
 
   const progressAnim = useRef(new Animated.Value(0)).current;
+
+  const getPrivacyRisk = () => {
+    if (images.length === 0) return { label: 'SÉCURISÉ', color: '#4ADE80', score: 100 };
+    const hasGPS = images.some(img => img.exif?.GPSLatitude);
+    const hasDevice = images.some(img => img.exif?.Model);
+    
+    if (hasGPS) return { label: 'RISQUE ÉLEVÉ', color: '#FB7185', score: 30 };
+    if (hasDevice) return { label: 'RISQUE MOYEN', color: '#FACC15', score: 65 };
+    return { label: 'RISQUE FAIBLE', color: '#818CF8', score: 90 };
+  };
+
+  const risk = getPrivacyRisk();
 
   useEffect(() => {
     loadStats();
@@ -362,14 +379,14 @@ export default function Index() {
           </View>
           
           <View style={styles.topActions}>
-            <TouchableScale onPress={() => router.push('/extractor')} style={styles.navActionBtn}>
+            <TouchableScale onPress={() => router.push('/extractor' as any)} style={styles.navActionBtn}>
               <BlurView intensity={20} tint="light" style={styles.navActionBlur}>
                 <Zap size={22} color="#FACC15" fill="#FACC15" />
               </BlurView>
             </TouchableScale>
-            <TouchableScale onPress={() => router.push('/camera')} style={[styles.navActionBtn, { marginLeft: 12 }]}>
+            <TouchableScale onPress={() => setShowSettings(true)} style={[styles.navActionBtn, { marginLeft: 12 }]}>
               <BlurView intensity={20} tint="light" style={styles.navActionBlur}>
-                <Camera size={22} color="#FFF" />
+                <ShieldCheck size={22} color="#FFF" />
               </BlurView>
             </TouchableScale>
           </View>
@@ -380,6 +397,16 @@ export default function Index() {
           showsVerticalScrollIndicator={false}
           stickyHeaderIndices={[1]}
         >
+          {/* PRIVACY RISK INDICATOR */}
+          <MotiView 
+            animate={{ backgroundColor: `${risk.color}15` }}
+            style={styles.riskIndicator}
+          >
+             <View style={[styles.riskDot, { backgroundColor: risk.color }]} />
+             <Text style={[styles.riskLabel, { color: risk.color }]}>{risk.label}</Text>
+             <Text style={styles.riskSub}>Analyse de la sélection en cours...</Text>
+          </MotiView>
+
           {/* ENHANCED STATS DASHBOARD */}
           <MotiView 
             from={{ opacity: 0, translateY: 20 }}
@@ -535,6 +562,46 @@ export default function Index() {
           asset={inspectorAsset} 
           onClose={() => setInspectorAsset(null)} 
         />
+
+        {/* SETTINGS MODAL */}
+        <Modal visible={showSettings} transparent animationType="fade">
+           <BlurView intensity={60} tint="dark" style={styles.modalOverlay}>
+              <MotiView 
+                from={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                style={styles.settingsCard}
+              >
+                 <Text style={styles.settingsTitle}>PARAMÈTRES PRO</Text>
+                 
+                 <View style={styles.settingItem}>
+                    <Text style={styles.settingText}>Suppression Auto (Originaux)</Text>
+                    <Switch 
+                        value={autoDelete} 
+                        onValueChange={setAutoDelete}
+                        trackColor={{ false: '#1E293B', true: '#6366F1' }}
+                    />
+                 </View>
+
+                 <TouchableScale 
+                    onPress={async () => {
+                        await deleteAsync(cacheDirectory || '', { idempotent: true });
+                        Alert.alert('Nettoyage', 'Cache de l\'application vidé.');
+                    }}
+                    style={styles.cacheBtn}
+                 >
+                    <Text style={styles.cacheBtnText}>Vider le Cache (Sécurité)</Text>
+                 </TouchableScale>
+
+                 <TouchableScale onPress={() => router.push('/camera' as any)} style={styles.cameraBtn}>
+                    <Text style={styles.cameraBtnText}>Ouvrir Caméra Zéro Trace</Text>
+                 </TouchableScale>
+
+                 <TouchableOpacity onPress={() => setShowSettings(false)} style={styles.closeSettings}>
+                    <Text style={styles.closeSettingsText}>FERMER</Text>
+                 </TouchableOpacity>
+              </MotiView>
+           </BlurView>
+        </Modal>
       </SafeAreaView>
     </View>
   );
@@ -889,4 +956,98 @@ const styles = StyleSheet.create({
   toggleLabelActive: {
     color: '#F8FAFC',
   },
+  riskIndicator: {
+    marginHorizontal: 24,
+    marginTop: 20,
+    padding: 16,
+    borderRadius: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.05)',
+  },
+  riskDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginRight: 10,
+  },
+  riskLabel: {
+    fontSize: 12,
+    fontWeight: '900',
+    letterSpacing: 1,
+    marginRight: 12,
+  },
+  riskSub: {
+    color: 'rgba(255,255,255,0.3)',
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 30,
+  },
+  settingsCard: {
+    width: '100%',
+    backgroundColor: '#0F172A',
+    borderRadius: 32,
+    padding: 30,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+  },
+  settingsTitle: {
+    color: '#FFF',
+    fontSize: 18,
+    fontWeight: '900',
+    letterSpacing: 2,
+    marginBottom: 30,
+    textAlign: 'center',
+  },
+  settingItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  settingText: {
+    color: 'rgba(255,255,255,0.8)',
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  cacheBtn: {
+    backgroundColor: 'rgba(255,75,75,0.1)',
+    padding: 16,
+    borderRadius: 16,
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  cacheBtnText: {
+    color: '#FF4B4B',
+    fontWeight: '800',
+    fontSize: 13,
+  },
+  cameraBtn: {
+    backgroundColor: 'rgba(99, 102, 241, 0.1)',
+    padding: 16,
+    borderRadius: 16,
+    alignItems: 'center',
+    marginTop: 12,
+  },
+  cameraBtnText: {
+    color: '#818CF8',
+    fontWeight: '800',
+    fontSize: 13,
+  },
+  closeSettings: {
+    marginTop: 30,
+    alignItems: 'center',
+  },
+  closeSettingsText: {
+    color: 'rgba(255,255,255,0.3)',
+    fontSize: 12,
+    fontWeight: '900',
+    letterSpacing: 2,
+  }
 });

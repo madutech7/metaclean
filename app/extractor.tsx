@@ -34,10 +34,11 @@ import {
   Sparkles,
   Zap,
   Globe,
-  Instagram,
-  Youtube,
-  Twitter,
-  Ghost
+  Camera,
+  Play,
+  MessageSquare,
+  Ghost,
+  CheckCircle2
 } from 'lucide-react-native';
 
 let FFmpegKit: any = null;
@@ -203,9 +204,9 @@ export default function UniversalExtractor() {
   const getPlatformIcon = () => {
     switch(platform) {
       case 'tiktok': return { Icon: Music, color: '#FF2D55' };
-      case 'instagram': return { Icon: Instagram, color: '#E1306C' };
-      case 'youtube': return { Icon: Youtube, color: '#FF0000' };
-      case 'x': return { Icon: Twitter, color: '#1DA1F2' };
+      case 'instagram': return { Icon: Camera, color: '#E1306C' };
+      case 'youtube': return { Icon: Play, color: '#FF0000' };
+      case 'x': return { Icon: MessageSquare, color: '#1DA1F2' };
       default: return { Icon: Globe, color: '#6366F1' };
     }
   };
@@ -331,12 +332,12 @@ export default function UniversalExtractor() {
               </MotiView>
               
               {/* PLATFORM LIST */}
-              <View style={styles.platformBadgeRow}>
-                 <PlatformIcon icon={Music} label="TikTok" active={platform === 'tiktok'} />
-                 <PlatformIcon icon={Instagram} label="Insta" active={platform === 'instagram'} />
-                 <PlatformIcon icon={Youtube} label="YouTube" active={platform === 'youtube'} />
-                 <PlatformIcon icon={Twitter} label="X" active={platform === 'x'} />
-              </View>
+               <View style={styles.platformBadgeRow}>
+                  <PlatformIcon icon={Music} label="TikTok" active={platform === 'tiktok'} />
+                  <PlatformIcon icon={Camera} label="Insta" active={platform === 'instagram'} />
+                  <PlatformIcon icon={Play} label="YouTube" active={platform === 'youtube'} />
+                  <PlatformIcon icon={MessageSquare} label="X" active={platform === 'x'} />
+               </View>
             </KeyboardAvoidingView>
           </View>
         </TouchableWithoutFeedback>

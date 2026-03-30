@@ -14,7 +14,7 @@ export default function RootLayout() {
       <ThemeProvider value={DefaultTheme}>
         <Stack screenOptions={{ headerShown: false }}>
           <Stack.Screen name="index" options={{ headerShown: false }} />
-          <Stack.Screen name="tiktok" options={{ presentation: 'modal', headerShown: false }} />
+          <Stack.Screen name="extractor" options={{ presentation: 'modal', headerShown: false }} />
           <Stack.Screen name="camera" options={{ presentation: 'fullScreenModal', headerShown: false }} />
         </Stack>
         <StatusBar style="auto" />
