@@ -51,7 +51,8 @@
           "savePhotosPermission": "L'application a besoin d'enregistrer la photo nettoyée.",
           "isAccessMediaLocationEnabled": true
         }
-      ]
+      ],
+      "./utils/withFFmpegFix"
     ],
     "experiments": {
       "typedRoutes": true,

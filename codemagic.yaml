@@ -19,6 +19,30 @@ workflows:
           npx expo prebuild --platform ios --clean || exit 1
           echo "Prebuild finished. Listing ios directory:"
           ls -la ios/ || echo "WARNING: ios directory not found!"
+      - name: Fix FFmpeg 404
+        script: |
+          cd ios
+          echo "Generating local podspec for FFmpeg to bypass 404..."
+          cat <<EOF > ffmpeg-kit-ios-https.podspec
+          Pod::Spec.new do |s|
+            s.name             = 'ffmpeg-kit-ios-https'
+            s.version          = '6.0'
+            s.summary          = 'Mirror of FFmpegKit for iOS'
+            s.homepage         = 'https://github.com/luthviar/ffmpeg-kit-ios-full'
+            s.license          = { :type => 'LGPL-3.0' }
+            s.authors          = { 'Taner Sener' => 'tanersener@gmail.com' }
+            s.platform             = :ios, '12.1'
+            s.source               = { :http => 'https://github.com/luthviar/ffmpeg-kit-ios-full/releases/download/6.0/ffmpeg-kit-ios-full.zip' }
+            s.vendored_frameworks = 'ffmpeg-kit-ios-full/*.xcframework'
+          end
+          EOF
+          
+          echo "Patching Podfile to use local podspec..."
+          # Inject the pod line at the top of the Podfile
+          sed -i '' "1s/^/pod 'ffmpeg-kit-ios-https', :path => 'ffmpeg-kit-ios-https.podspec'\n/" Podfile
+          
+          echo "Current Podfile content (first 10 lines):"
+          head -n 10 Podfile
       - name: Install CocoaPods
         script: |
           cd ios
