@@ -77,6 +77,15 @@ const TouchableScale = ({ onPress, children, style, disabled = false }: any) => 
 };
 
 // --- COMPONENTS ---
+const MetadataToggle = ({ label, icon: Icon, isActive, onToggle }: any) => (
+  <TouchableScale onPress={onToggle} style={styles.toggleBtn}>
+    <BlurView intensity={15} tint="light" style={[styles.toggleBlur, isActive && styles.toggleBlurActive]}>
+      <Icon size={16} color={isActive ? "#6366F1" : "rgba(255,255,255,0.4)"} />
+      <Text style={[styles.toggleLabel, isActive && styles.toggleLabelActive]}>{label}</Text>
+    </BlurView>
+  </TouchableScale>
+);
+
 const ImageCard = ({ item, index, onRemove, onInspect, isProcessing }: any) => {
   const hasGPS = !!item.exif?.GPSLatitude;
 
@@ -134,8 +143,19 @@ export default function Index() {
   const [images, setImages] = useState<ImagePicker.ImagePickerAsset[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [progress, setProgress] = useState(0);
-  const [stats, setStats] = useState<PrivacyStats>({ cleanedItems: 0, removedGPS: 0 });
+  const [stats, setStats] = useState<PrivacyStats>({ 
+    filesCleaned: 0, 
+    gpsTracesRemoved: 0, 
+    deviceTracesRemoved: 0,
+    totalSizeCleanedMB: 0,
+    lastCleanedDate: null 
+  });
   const [inspectorAsset, setInspectorAsset] = useState<ImagePicker.ImagePickerAsset | null>(null);
+
+  // Metadata Settings
+  const [stripGPS, setStripGPS] = useState(true);
+  const [stripDevice, setStripDevice] = useState(true);
+  const [stripAll, setStripAll] = useState(true);
 
   const progressAnim = useRef(new Animated.Value(0)).current;
 
@@ -188,12 +208,14 @@ export default function Index() {
   const cleanMetadataAndSave = async () => {
     if (images.length === 0) return;
 
-    if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
     setIsProcessing(true);
     setProgress(0);
 
     let successCount = 0;
     let removedGPSCount = 0;
+    let removedDeviceCount = 0;
+    let totalSizeMB = 0;
     const originalAssetIds: string[] = [];
 
     for (let i = 0; i < images.length; i++) {
@@ -201,7 +223,11 @@ export default function Index() {
         try {
             let finalUri = file.uri;
             if (file.exif?.GPSLatitude) removedGPSCount++;
+            if (file.exif?.Model || file.exif?.Make) removedDeviceCount++;
             if (file.assetId) originalAssetIds.push(file.assetId);
+
+            // Estimate size
+            if (file.fileSize) totalSizeMB += file.fileSize / (1024 * 1024);
             
             if (file.type === 'video') {
                 if (isExpoGo || !FFmpegKit) {
@@ -210,21 +236,29 @@ export default function Index() {
                    return;
                 }
                 const baseDir = documentDirectory || cacheDirectory || '';
-                const outputUri = `${baseDir}clean_${Date.now()}.mp4`;
-                const script = `-i "${file.uri}" -map_metadata -1 -c:v copy -c:a copy "${outputUri}"`;
+                const outputUri = `${baseDir}clean_${Date.now()}_${i}.mp4`;
+                
+                // Smart Script
+                let script = `-i "${file.uri}" `;
+                if (stripAll) script += `-map_metadata -1 `;
+                else {
+                  if (stripGPS) script += `-metadata:s:v:0 location= -metadata location= `;
+                  if (stripDevice) script += `-metadata title= -metadata model= `;
+                }
+                script += `-c:v copy -c:a copy "${outputUri}"`;
+                
                 try {
                   const session = await FFmpegKit.execute(script);
                   const returnCode = await session.getReturnCode();
                   if (ReturnCode.isSuccess(returnCode)) finalUri = outputUri;
                   else throw new Error("FFmpeg Error");
                 } catch (e) {
-                   setIsProcessing(false);
-                   Alert.alert('Erreur', 'Impossible de traiter la vidéo.');
-                   return;
+                   console.error('Video Error', e);
+                   continue;
                 }
             } else {
                 const manipulatedImage = await ImageManipulator.manipulateAsync(
-                    file.uri, [], { compress: 1, format: ImageManipulator.SaveFormat.JPEG }
+                    file.uri, [], { compress: 0.95, format: ImageManipulator.SaveFormat.JPEG }
                 );
                 finalUri = manipulatedImage.uri;
             }
@@ -245,18 +279,23 @@ export default function Index() {
     }
 
     setIsProcessing(false);
-    const updatedStats = await updatePrivacyStats(successCount, removedGPSCount);
+    const updatedStats = await updatePrivacyStats({
+      filesCleaned: successCount,
+      gpsTracesRemoved: removedGPSCount,
+      deviceTracesRemoved: removedDeviceCount,
+      totalSizeCleanedMB: totalSizeMB
+    });
     if (updatedStats) setStats(updatedStats);
     
     if (Platform.OS !== 'web') Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     
     if (originalAssetIds.length > 0) {
       Alert.alert(
-        'Terminé ✅', 
-        `Les fichiers ont été sauvegardés sans métadonnées.\n\nSouhaitez-vous supprimer les originaux (contenant encore vos données GPS) ?`,
+        'Mission Pro Accomplie 🛡️', 
+        `Tes ${successCount} fichiers sont maintenant propres.\n\nSupprimer les originaux (traces GPS incluses) ?`,
         [
           { text: 'Non, garder', style: 'cancel', onPress: () => { setImages([]); } },
-          { text: 'Oui, supprimer', style: 'destructive', onPress: async () => {
+          { text: 'Oui, détruire', style: 'destructive', onPress: async () => {
              try {
                 await MediaLibrary.deleteAssetsAsync(originalAssetIds);
              } catch (e) {}
@@ -291,7 +330,7 @@ export default function Index() {
               animate={{ opacity: 1, translateX: 0 }}
               style={styles.navSubtitle}
             >
-              PRIVE & SÉCURISÉ
+              MODE PROFESSIONNEL
             </MotiText>
             <MotiText 
               from={{ opacity: 0, translateX: -20 }}
@@ -322,16 +361,27 @@ export default function Index() {
           showsVerticalScrollIndicator={false}
           stickyHeaderIndices={[1]}
         >
-          {/* STATS SECTION */}
+          {/* ENHANCED STATS DASHBOARD */}
           <MotiView 
             from={{ opacity: 0, translateY: 20 }}
             animate={{ opacity: 1, translateY: 0 }}
             transition={{ delay: 200 }}
             style={styles.statsSection}
           >
-            <StatCard title="Fichiers Sécurisés" value={stats.cleanedItems} icon="shield" color="#6366F1" delay={300} />
-            <StatCard title="GPS Bloqués" value={stats.removedGPS} icon="map-pin" color="#FB7185" delay={400} />
+            <StatCard title="Fichiers" value={stats.filesCleaned} icon="shield" color="#6366F1" delay={300} />
+            <StatCard title="GPS Bloqués" value={stats.gpsTracesRemoved} icon="map-pin" color="#FB7185" delay={400} />
+            <StatCard title="Poids Protégé" value={`${Math.round(stats.totalSizeCleanedMB)} MB`} icon="zap" color="#FACC15" delay={500} />
           </MotiView>
+
+          {/* METADATA CONTROLS */}
+          <View style={styles.controlHeader}>
+            <Text style={styles.gridHeaderText}>PARAMÈTRES DE PURIFICATION</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.toggleRow}>
+              <MetadataToggle label="GPS" icon={MapPin} isActive={stripGPS} onToggle={() => setStripGPS(!stripGPS)} />
+              <MetadataToggle label="Appareil" icon={Info} isActive={stripDevice} onToggle={() => setStripDevice(!stripDevice)} />
+              <MetadataToggle label="Tout Effacer" icon={ShieldCheck} isActive={stripAll} onToggle={() => setStripAll(!stripAll)} />
+            </ScrollView>
+          </View>
 
           {/* MAIN GRID HEADER */}
           <View style={styles.gridHeader}>
@@ -438,7 +488,7 @@ export default function Index() {
                     style={styles.actionGradient}
                   >
                     {isProcessing ? (
-                      <Text style={styles.actionText}>Traitement...</Text>
+                      <Text style={styles.actionText}>Purification {progress}/{images.length}</Text>
                     ) : (
                       <>
                         <ShieldCheck size={22} color="#FFF" style={{ marginRight: 10 }} />
@@ -782,5 +832,39 @@ const styles = StyleSheet.create({
   footerProgressBarFill: {
     height: '100%',
     backgroundColor: '#6366F1',
+  },
+  controlHeader: {
+    paddingHorizontal: 24,
+    paddingVertical: 10,
+  },
+  toggleRow: {
+    flexDirection: 'row',
+    marginTop: 12,
+  },
+  toggleBtn: {
+    marginRight: 12,
+  },
+  toggleBlur: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 14,
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.05)',
+  },
+  toggleBlurActive: {
+    backgroundColor: 'rgba(99, 102, 241, 0.1)',
+    borderColor: 'rgba(99, 102, 241, 0.2)',
+  },
+  toggleLabel: {
+    color: 'rgba(255,255,255,0.4)',
+    fontSize: 13,
+    fontWeight: '700',
+    marginLeft: 8,
+  },
+  toggleLabelActive: {
+    color: '#F8FAFC',
   },
 });

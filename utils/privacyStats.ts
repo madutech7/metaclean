@@ -1,32 +1,47 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export interface PrivacyStats {
-  cleanedItems: number;
-  removedGPS: number;
+  filesCleaned: number;
+  gpsTracesRemoved: number;
+  deviceTracesRemoved: number;
+  totalSizeCleanedMB: number;
+  lastCleanedDate: string | null;
 }
 
-const STATS_KEY = '@MetaClean_Stats';
+const STATS_KEY = '@metaclean_stats_v2';
+
+const INITIAL_STATS: PrivacyStats = {
+  filesCleaned: 0,
+  gpsTracesRemoved: 0,
+  deviceTracesRemoved: 0,
+  totalSizeCleanedMB: 0,
+  lastCleanedDate: null,
+};
 
 export const getPrivacyStats = async (): Promise<PrivacyStats> => {
   try {
     const jsonValue = await AsyncStorage.getItem(STATS_KEY);
-    return jsonValue != null ? JSON.parse(jsonValue) : { cleanedItems: 0, removedGPS: 0 };
+    return jsonValue != null ? JSON.parse(jsonValue) : INITIAL_STATS;
   } catch (e) {
-    return { cleanedItems: 0, removedGPS: 0 };
+    return INITIAL_STATS;
   }
 };
 
-export const updatePrivacyStats = async (itemsCount: number, gpsCount: number) => {
+export const updatePrivacyStats = async (update: Partial<PrivacyStats>) => {
   try {
     const current = await getPrivacyStats();
-    const newStats = {
-      cleanedItems: current.cleanedItems + itemsCount,
-      removedGPS: current.removedGPS + gpsCount,
+    const updated = {
+      ...current,
+      ...update,
+      filesCleaned: current.filesCleaned + (update.filesCleaned || 0),
+      gpsTracesRemoved: current.gpsTracesRemoved + (update.gpsTracesRemoved || 0),
+      deviceTracesRemoved: current.deviceTracesRemoved + (update.deviceTracesRemoved || 0),
+      totalSizeCleanedMB: current.totalSizeCleanedMB + (update.totalSizeCleanedMB || 0),
+      lastCleanedDate: new Date().toISOString(),
     };
-    await AsyncStorage.setItem(STATS_KEY, JSON.stringify(newStats));
-    return newStats;
+    await AsyncStorage.setItem(STATS_KEY, JSON.stringify(updated));
+    return updated;
   } catch (e) {
-    console.error('Failed to save privacy stats', e);
-    return { cleanedItems: 0, removedGPS: 0 };
+    console.error('Failed to update stats', e);
   }
 };

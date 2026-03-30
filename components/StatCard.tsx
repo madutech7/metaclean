@@ -1,5 +1,5 @@
 import { View, Text, StyleSheet, Dimensions } from 'react-native';
-import { Shield, MapPin } from 'lucide-react-native';
+import { Shield, MapPin, Zap } from 'lucide-react-native';
 import React from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MotiView } from 'moti';
@@ -9,13 +9,13 @@ const { width } = Dimensions.get('window');
 interface StatCardProps {
   title: string;
   value: string | number;
-  icon: 'shield' | 'map-pin';
+  icon: 'shield' | 'map-pin' | 'zap';
   color: string;
   delay?: number;
 }
 
 export function StatCard({ title, value, icon, color, delay = 0 }: StatCardProps) {
-  const Icon = icon === 'shield' ? Shield : MapPin;
+  const Icon = icon === 'shield' ? Shield : icon === 'map-pin' ? MapPin : Zap;
 
   return (
     <MotiView 
