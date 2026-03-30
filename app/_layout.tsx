@@ -11,13 +11,14 @@ export default function RootLayout() {
 
   return (
     <SafeAreaProvider>
-      <ThemeProvider value={DefaultTheme}>
-        <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="index" options={{ headerShown: false }} />
-          <Stack.Screen name="extractor" options={{ presentation: 'modal', headerShown: false }} />
-          <Stack.Screen name="camera" options={{ presentation: 'fullScreenModal', headerShown: false }} />
+      <ThemeProvider value={DarkTheme}>
+        <Stack screenOptions={{ headerShown: false }} initialRouteName="onboarding">
+          <Stack.Screen name="onboarding" />
+          <Stack.Screen name="index" />
+          <Stack.Screen name="extractor" options={{ presentation: 'modal' }} />
+          <Stack.Screen name="camera" options={{ presentation: 'fullScreenModal' }} />
         </Stack>
-        <StatusBar style="auto" />
+        <StatusBar style="light" />
       </ThemeProvider>
     </SafeAreaProvider>
   );

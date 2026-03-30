@@ -35,12 +35,12 @@ interface ExifInspectorModalProps {
 export function ExifInspectorModal({ visible, asset, onClose }: ExifInspectorModalProps) {
   if (!asset) return null;
 
-  const renderInfoRow = (label: string, value: string | undefined, Icon: any, color: string = '#6366F1') => {
+  const renderInfoRow = (label: string, value: string | undefined, Icon: any, color: string = '#00E5FF') => {
     if (!value) return null;
     return (
       <View style={styles.row}>
-        <View style={[styles.iconBox, { backgroundColor: `${color}15` }]}>
-          <Icon size={18} color={color} strokeWidth={2.5} />
+        <View style={[styles.iconBox, { borderColor: `${color}20`, backgroundColor: `${color}05` }]}>
+          <Icon size={16} color={color} strokeWidth={1.5} />
         </View>
         <View style={styles.rowText}>
           <Text style={styles.rowLabel}>{label}</Text>
@@ -70,20 +70,18 @@ export function ExifInspectorModal({ visible, asset, onClose }: ExifInspectorMod
               from={{ translateY: height }}
               animate={{ translateY: 0 }}
               exit={{ translateY: height }}
-              transition={{ type: 'spring', damping: 20, stiffness: 100 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 120 }}
               style={styles.modalContent}
             >
-              <BlurView intensity={30} tint="dark" style={StyleSheet.absoluteFill} />
-              
               <View style={styles.header}>
                 <View style={styles.headerHandle} />
                 <View style={styles.headerRow}>
                   <View style={styles.headerTitleGroup}>
-                    <Info size={24} color="#6366F1" style={{ marginRight: 12 }} />
-                    <Text style={styles.modalTitle}>ADN du Fichier</Text>
+                    <Text style={styles.modalSubtitle}>SCANNING ASSET</Text>
+                    <Text style={styles.modalTitle}>FILE SIGNATURE</Text>
                   </View>
                   <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
-                    <XCircle size={32} color="rgba(255,255,255,0.2)" />
+                     <XCircle size={28} color="rgba(255,255,255,0.2)" />
                   </TouchableOpacity>
                 </View>
               </View>
@@ -91,33 +89,33 @@ export function ExifInspectorModal({ visible, asset, onClose }: ExifInspectorMod
               <ScrollView style={styles.scrollArea} showsVerticalScrollIndicator={false}>
                 {hasGPS && (
                   <View style={styles.dangerSignal}>
-                    <ShieldAlert size={28} color="#FF4B4B" />
+                    <ShieldAlert size={24} color="#FF5252" />
                     <View style={styles.dangerContent}>
-                      <Text style={styles.dangerTitle}>FUITE DE DONNÉES GPS</Text>
-                      <Text style={styles.dangerDesc}>Ce fichier contient votre position géographique exacte. Effacez-la avant de partager.</Text>
+                      <Text style={styles.dangerTitle}>GPS EXPOSURE DETECTED</Text>
+                      <Text style={styles.dangerDesc}>EXACT GEOLOCATION DATA EMBEDDED. PURGE RECOMMENDED BEFORE DISSEMINATION.</Text>
                     </View>
                   </View>
                 )}
 
                 <View style={styles.section}>
-                  <Text style={styles.sectionTitle}>HARDWARE & SYSTÈME</Text>
-                  {renderInfoRow('Modèle', asset.exif?.Model, Smartphone, '#6366F1')}
-                  {renderInfoRow('Fabricant', asset.exif?.Make, Cpu, '#6366F1')}
-                  {renderInfoRow('Software', asset.exif?.Software, Zap, '#6366F1')}
+                  <Text style={styles.sectionTitle}>HARDWARE & SYSTEM</Text>
+                  {renderInfoRow('MODEL', asset.exif?.Model, Smartphone)}
+                  {renderInfoRow('VENDOR', asset.exif?.Make, Cpu)}
+                  {renderInfoRow('FIRMWARE', asset.exif?.Software, Zap)}
                 </View>
 
                 <View style={styles.section}>
-                  <Text style={styles.sectionTitle}>CAPTEUR & OPTIQUE</Text>
-                  {renderInfoRow('Ouverture', asset.exif?.FNumber ? `f/${asset.exif.FNumber}` : undefined, Aperture, '#FACC15')}
-                  {renderInfoRow('ISO', asset.exif?.ISOSpeedRatings?.toString(), Zap, '#FACC15')}
-                  {renderInfoRow('Exposition', asset.exif?.ExposureTime ? `1/${Math.round(1/asset.exif.ExposureTime)}s` : undefined, Timer, '#FACC15')}
+                  <Text style={styles.sectionTitle}>OPTICS & SENSOR</Text>
+                  {renderInfoRow('APERTURE', asset.exif?.FNumber ? `f/${asset.exif.FNumber}` : undefined, Aperture, '#FFD740')}
+                  {renderInfoRow('ISO', asset.exif?.ISOSpeedRatings?.toString(), Zap, '#FFD740')}
+                  {renderInfoRow('EXPOSURE', asset.exif?.ExposureTime ? `1/${Math.round(1/asset.exif.ExposureTime)}s` : undefined, Timer, '#FFD740')}
                 </View>
 
                 {hasGPS && (
                   <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>COORDONNÉES À PURGER</Text>
-                    {renderInfoRow('Latitude', asset.exif?.GPSLatitude?.toString(), MapPin, '#FF4B4B')}
-                    {renderInfoRow('Longitude', asset.exif?.GPSLongitude?.toString(), MapPin, '#FF4B4B')}
+                    <Text style={styles.sectionTitle}>GEOLOCATION PAYLOAD</Text>
+                    {renderInfoRow('LATITUDE', asset.exif?.GPSLatitude?.toString(), MapPin, '#FF5252')}
+                    {renderInfoRow('LONGITUDE', asset.exif?.GPSLongitude?.toString(), MapPin, '#FF5252')}
                   </View>
                 )}
                 
@@ -131,36 +129,35 @@ export function ExifInspectorModal({ visible, asset, onClose }: ExifInspectorMod
   );
 }
 
-// Quick helper to fix the missing touchable
 import { TouchableWithoutFeedback } from 'react-native';
 
 const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
     justifyContent: 'flex-end',
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'rgba(0,0,0,0.8)',
   },
   modalContent: {
-    backgroundColor: 'rgba(15, 23, 42, 0.95)',
-    borderTopLeftRadius: 40,
-    borderTopRightRadius: 40,
+    backgroundColor: '#050505',
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
     height: height * 0.85,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
+    borderColor: 'rgba(255,255,255,0.05)',
   },
   header: {
     paddingTop: 12,
-    paddingBottom: 20,
-    paddingHorizontal: 28,
+    paddingBottom: 24,
+    paddingHorizontal: 30,
   },
   headerHandle: {
-    width: 60,
-    height: 6,
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    borderRadius: 3,
+    width: 40,
+    height: 4,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderRadius: 2,
     alignSelf: 'center',
-    marginBottom: 20,
+    marginBottom: 24,
   },
   headerRow: {
     flexDirection: 'row',
@@ -168,12 +165,18 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   headerTitleGroup: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flex: 1,
+  },
+  modalSubtitle: {
+    color: '#00E5FF',
+    fontSize: 9,
+    fontWeight: '900',
+    letterSpacing: 3,
+    marginBottom: 4,
   },
   modalTitle: {
-    color: '#F8FAFC',
-    fontSize: 24,
+    color: '#FFF',
+    fontSize: 22,
     fontWeight: '900',
     letterSpacing: -0.5,
   },
@@ -182,16 +185,16 @@ const styles = StyleSheet.create({
   },
   scrollArea: {
     flex: 1,
-    paddingHorizontal: 28,
+    paddingHorizontal: 30,
   },
   dangerSignal: {
     flexDirection: 'row',
-    backgroundColor: 'rgba(255, 75, 75, 0.1)',
-    borderRadius: 24,
-    padding: 24,
+    backgroundColor: 'rgba(255, 82, 82, 0.05)',
+    borderRadius: 16,
+    padding: 20,
     marginBottom: 32,
-    borderWidth: 1.5,
-    borderColor: 'rgba(255, 75, 75, 0.2)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 82, 82, 0.2)',
     alignItems: 'center',
   },
   dangerContent: {
@@ -199,58 +202,60 @@ const styles = StyleSheet.create({
     marginLeft: 16,
   },
   dangerTitle: {
-    color: '#FF4B4B',
-    fontSize: 16,
+    color: '#FF5252',
+    fontSize: 12,
     fontWeight: '900',
-    letterSpacing: 1,
+    letterSpacing: 1.5,
     marginBottom: 4,
   },
   dangerDesc: {
-    color: 'rgba(255, 75, 75, 0.6)',
-    fontSize: 13,
-    lineHeight: 18,
-    fontWeight: '700',
+    color: 'rgba(255, 82, 82, 0.5)',
+    fontSize: 10,
+    lineHeight: 14,
+    fontWeight: '800',
   },
   section: {
     marginBottom: 32,
   },
   sectionTitle: {
-    color: 'rgba(248, 250, 252, 0.3)',
-    fontSize: 11,
+    color: 'rgba(255, 255, 255, 0.2)',
+    fontSize: 9,
     fontWeight: '900',
-    letterSpacing: 2,
-    marginBottom: 20,
+    letterSpacing: 3,
+    marginBottom: 16,
   },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.03)',
-    borderRadius: 20,
-    padding: 16,
-    marginBottom: 12,
+    backgroundColor: 'rgba(255,255,255,0.01)',
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 8,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.02)',
   },
   iconBox: {
-    width: 44,
-    height: 44,
-    borderRadius: 14,
+    width: 36,
+    height: 36,
+    borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 16,
+    marginRight: 14,
+    borderWidth: 1,
   },
   rowText: {
     flex: 1,
   },
   rowLabel: {
-    color: 'rgba(248, 250, 252, 0.4)',
-    fontSize: 12,
-    fontWeight: '700',
+    color: 'rgba(255, 255, 255, 0.3)',
+    fontSize: 10,
+    fontWeight: '800',
     marginBottom: 2,
   },
   rowValue: {
-    color: '#F8FAFC',
-    fontSize: 16,
-    fontWeight: '800',
+    color: '#FFF',
+    fontSize: 15,
+    fontWeight: '900',
+    letterSpacing: -0.5,
   },
 });

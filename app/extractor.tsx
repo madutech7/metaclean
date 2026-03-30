@@ -31,20 +31,17 @@ import {
   Link2, 
   Download, 
   ShieldCheck, 
-  Sparkles,
-  Zap,
   Globe,
   Camera,
   Play,
   MessageSquare,
-  Ghost,
   CheckCircle2
 } from 'lucide-react-native';
 
+const isExpoGo = Constants.executionEnvironment === ExecutionEnvironment.StoreClient;
+
 let FFmpegKit: any = null;
 let ReturnCode: any = null;
-
-const isExpoGo = Constants.executionEnvironment === ExecutionEnvironment.StoreClient;
 
 if (!isExpoGo) {
   try {
@@ -55,8 +52,6 @@ if (!isExpoGo) {
     console.error('Failed to load FFmpegKit:', e);
   }
 }
-
-const { width } = Dimensions.get('window');
 
 const TouchableScale = ({ onPress, children, style, disabled = false }: any) => {
   const scale = useRef(new Animated.Value(1)).current;
@@ -109,7 +104,7 @@ export default function UniversalExtractor() {
 
   const handleDownload = async () => {
     if (!url) {
-      Alert.alert('URL Manquante', 'Veuillez coller un lien de vidéo.');
+      Alert.alert('URL Missing', 'Please paste a valid video link.');
       return;
     }
 
@@ -120,7 +115,6 @@ export default function UniversalExtractor() {
     try {
       let videoUrl = '';
       
-      // LOGIQUE MULTI-PLATEFORME
       if (platform === 'tiktok') {
         const apiUrl = `https://www.tikwm.com/api/?url=${encodeURIComponent(url)}`;
         const response = await fetch(apiUrl);
@@ -129,22 +123,19 @@ export default function UniversalExtractor() {
           videoUrl = json.data.hdplay || json.data.play;
         }
       } else {
-        // Fallback for others (Logic could use a universal API like Cobalt or similar)
-        // For demonstration, we'll try a common public backend
         try {
-          // Using a common high-quality downloader proxy API
           const universalApi = `https://api.vashisth.xyz/vd/?url=${encodeURIComponent(url)}`;
           const response = await fetch(universalApi);
           const json = await response.json();
           if (json.url) videoUrl = json.url;
           else if (json.data?.[0]?.url) videoUrl = json.data[0].url;
         } catch (e) {
-          throw new Error("L'extraction sur cette plateforme nécessite une API Pro. MetaClean supporte TikTok nativement.");
+          throw new Error("This platform requires a Pro API. TikTok is natively supported.");
         }
       }
 
       if (!videoUrl) {
-        throw new Error("Impossible de récupérer la vidéo. Assurez-vous que le profil est public.");
+        throw new Error("Unable to fetch video. Ensure profile is public.");
       }
 
       const baseDir = documentDirectory || cacheDirectory || '';
@@ -152,7 +143,7 @@ export default function UniversalExtractor() {
       const downloadResult = await downloadAsync(videoUrl, tempUri);
 
       if (downloadResult.status !== 200) {
-        throw new Error("Erreur lors du téléchargement du fichier source.");
+        throw new Error("Source file download failed.");
       }
 
       setStep('cleaning');
@@ -160,7 +151,6 @@ export default function UniversalExtractor() {
 
       if (!isExpoGo && FFmpegKit) {
         const cleanUri = `${documentDirectory}pure_${Date.now()}.mp4`;
-        // Pro Script: Strip all metadata + scramble stream info
         const script = `-i "${tempUri}" -map_metadata -1 -c copy "${cleanUri}"`;
         const session = await FFmpegKit.execute(script);
         const returnCode = await session.getReturnCode();
@@ -173,7 +163,7 @@ export default function UniversalExtractor() {
 
       setStep('saving');
       const { status } = await MediaLibrary.requestPermissionsAsync();
-      if (status !== 'granted') throw new Error("Accès galerie requis.");
+      if (status !== 'granted') throw new Error("Gallery access required.");
 
       const asset = await MediaLibrary.createAssetAsync(finalUri);
       const album = await MediaLibrary.getAlbumAsync('MetaClean');
@@ -183,9 +173,9 @@ export default function UniversalExtractor() {
       if (Platform.OS !== 'web') Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       
       Alert.alert(
-        'Mission Réussie 🛡️', 
-        'Vidéo extraite, nettoyée et sauvegardée sans aucune trace numérique.',
-        [{ text: 'Parfait', onPress: () => {
+        'PURIFIED', 
+        'PROTOCOL COMPLETE. ASSET SAVED WITH ZERO DIGITAL FOOTPRINT.',
+        [{ text: 'DONE', onPress: () => {
           setUrl('');
           setLoading(false);
           setStep('idle');
@@ -195,7 +185,7 @@ export default function UniversalExtractor() {
 
     } catch (error: any) {
       console.error(error);
-      Alert.alert('Erreur MetaClean', error.message || "Lien non supporté ou erreur réseau.");
+      Alert.alert('SYSTEM ERROR', error.message || "Link not supported or network error.");
       setLoading(false);
       setStep('idle');
     }
@@ -206,8 +196,8 @@ export default function UniversalExtractor() {
       case 'tiktok': return { Icon: Music, color: '#FF2D55' };
       case 'instagram': return { Icon: Camera, color: '#E1306C' };
       case 'youtube': return { Icon: Play, color: '#FF0000' };
-      case 'x': return { Icon: MessageSquare, color: '#1DA1F2' };
-      default: return { Icon: Globe, color: '#6366F1' };
+      case 'x': return { Icon: MessageSquare, color: '#FFF' };
+      default: return { Icon: Globe, color: '#00E5FF' };
     }
   };
 
@@ -216,10 +206,7 @@ export default function UniversalExtractor() {
   return (
     <View style={styles.container}>
       <StatusBar style="light" />
-      <LinearGradient 
-        colors={['#020617', '#0F172A', '#1E293B']} 
-        style={StyleSheet.absoluteFill}
-      />
+      <View style={StyleSheet.absoluteFill}><View style={{flex: 1, backgroundColor: '#050505'}} /></View>
       
       <SafeAreaView style={{flex: 1}}>
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
@@ -228,7 +215,7 @@ export default function UniversalExtractor() {
               <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
                 <ChevronLeft size={24} color="#FFF" />
               </TouchableOpacity>
-              <Text style={styles.headerTitle}>PRO EXTRACTOR</Text>
+              <Text style={styles.headerTitle}>EXTRACTION PROTOCOL</Text>
               <View style={{ width: 44 }} />
             </View>
 
@@ -242,10 +229,9 @@ export default function UniversalExtractor() {
                 transition={{ type: 'spring' }}
                 style={styles.iconContainer}
               >
-                <View style={[styles.iconBackground, { borderColor: `${color}40`, backgroundColor: `${color}10` }]}>
-                  <Icon size={48} color={color} strokeWidth={1.5} />
+                <View style={[styles.iconBackground, { borderColor: `${color}30`, backgroundColor: `${color}05` }]}>
+                  <Icon size={48} color={color} strokeWidth={1} />
                 </View>
-                <View style={[styles.glow, { backgroundColor: color, opacity: 0.15 }]} />
               </MotiView>
 
               <MotiText 
@@ -253,7 +239,7 @@ export default function UniversalExtractor() {
                 animate={{ opacity: 1, translateY: 0 }}
                 style={styles.title}
               >
-                Extracteur Universel
+                Universal Extractor
               </MotiText>
               <MotiText 
                 from={{ opacity: 0, translateY: 10 }}
@@ -261,7 +247,7 @@ export default function UniversalExtractor() {
                 transition={{ delay: 100 }}
                 style={styles.subtitle}
               >
-                Téléchargez n&apos;importe quelle vidéo depuis les réseaux sociaux en retirant instantanément toutes les métadonnées cachées.
+                DOWNLOAD ASSETS FROM SOCIAL PLATFORMS AND PURGE ALL HIDDEN TRACKING METADATA INSTANTLY.
               </MotiText>
 
               <MotiView 
@@ -272,11 +258,11 @@ export default function UniversalExtractor() {
               >
                 <View style={styles.inputCard}>
                   <View style={styles.inputWrapper}>
-                    <Link2 size={20} color="rgba(255,255,255,0.3)" style={styles.inputIcon} />
+                    <Link2 size={20} color="rgba(255,255,255,0.2)" style={styles.inputIcon} />
                     <TextInput
                       style={styles.input}
-                      placeholder="Collez le lien ici..."
-                      placeholderTextColor="rgba(255,255,255,0.2)"
+                      placeholder="Paste link here..."
+                      placeholderTextColor="rgba(255,255,255,0.15)"
                       value={url}
                       onChangeText={setUrl}
                       autoCapitalize="none"
@@ -303,7 +289,7 @@ export default function UniversalExtractor() {
                     style={styles.mainBtn}
                   >
                     <LinearGradient
-                      colors={loading ? ['#1E293B', '#334155'] : [color, `${color}99`]}
+                      colors={loading ? ['#111', '#050505'] : [color, `${color}99`]}
                       start={{ x: 0, y: 0 }}
                       end={{ x: 1, y: 0 }}
                       style={styles.btnGradient}
@@ -312,13 +298,13 @@ export default function UniversalExtractor() {
                         <View style={styles.loadingWrapper}>
                           <ActivityIndicator color="#FFF" size="small" style={{ marginRight: 12 }} />
                           <Text style={styles.btnText}>
-                            {step === 'downloading' ? 'Extraction...' : step === 'cleaning' ? 'Purification...' : 'Finalisation...'}
+                            {step === 'downloading' ? 'EXTRACTING...' : step === 'cleaning' ? 'PURIFYING...' : 'FINALIZING...'}
                           </Text>
                         </View>
                       ) : (
                         <View style={styles.btnInner}>
                           <Download size={22} color="#FFF" style={{ marginRight: 12 }} />
-                          <Text style={styles.btnText}>Purger & Extraire</Text>
+                          <Text style={styles.btnText}>EXECUTE PURGE</Text>
                         </View>
                       )}
                     </LinearGradient>
@@ -326,17 +312,16 @@ export default function UniversalExtractor() {
                 </View>
 
                 <View style={styles.privacyBadge}>
-                  <ShieldCheck size={16} color="#4ADE80" />
-                  <Text style={styles.privacyText}>Extraction sans aucune signature numérique</Text>
+                  <ShieldCheck size={14} color="#00E5FF" />
+                  <Text style={styles.privacyText}>ZERO DIGITAL SIGNATURE DETECTED</Text>
                 </View>
               </MotiView>
               
-              {/* PLATFORM LIST */}
                <View style={styles.platformBadgeRow}>
-                  <PlatformIcon icon={Music} label="TikTok" active={platform === 'tiktok'} />
-                  <PlatformIcon icon={Camera} label="Insta" active={platform === 'instagram'} />
-                  <PlatformIcon icon={Play} label="YouTube" active={platform === 'youtube'} />
-                  <PlatformIcon icon={MessageSquare} label="X" active={platform === 'x'} />
+                  <PlatformIcon icon={Music} label="TIKTOK" active={platform === 'tiktok'} color="#FF2D55" />
+                  <PlatformIcon icon={Camera} label="INSTA" active={platform === 'instagram'} color="#E1306C" />
+                  <PlatformIcon icon={Play} label="YOUTUBE" active={platform === 'youtube'} color="#FF0000" />
+                  <PlatformIcon icon={MessageSquare} label="X" active={platform === 'x'} color="#FFF" />
                </View>
             </KeyboardAvoidingView>
           </View>
@@ -346,17 +331,17 @@ export default function UniversalExtractor() {
   );
 }
 
-const PlatformIcon = ({ icon: Icon, label, active }: any) => (
-    <View style={[styles.platformBadge, active && styles.platformBadgeActive]}>
-        <Icon size={14} color={active ? "#FFF" : "rgba(255,255,255,0.4)"} />
-        <Text style={[styles.platformBadgeText, active && styles.platformBadgeTextActive]}>{label}</Text>
+const PlatformIcon = ({ icon: Icon, label, active, color }: any) => (
+    <View style={[styles.platformBadge, active && { borderColor: `${color}30`, backgroundColor: `${color}05` }]}>
+        <Icon size={12} color={active ? (color === '#FFF' ? '#FFF' : color) : "rgba(255,255,255,0.2)"} />
+        <Text style={[styles.platformBadgeText, active && { color: (color === '#FFF' ? '#FFF' : color) }]}>{label}</Text>
     </View>
 );
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#020617',
+    backgroundColor: '#050505',
   },
   inner: {
     flex: 1,
@@ -372,17 +357,17 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 14,
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    backgroundColor: 'rgba(255,255,255,0.03)',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
+    borderColor: 'rgba(255,255,255,0.05)',
   },
   headerTitle: {
-    color: '#F8FAFC',
-    fontSize: 12,
+    color: 'rgba(255,255,255,0.3)',
+    fontSize: 10,
     fontWeight: '900',
-    letterSpacing: 2.5,
+    letterSpacing: 3,
   },
   content: {
     flex: 1,
@@ -397,23 +382,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   iconBackground: {
-    width: 100,
-    height: 100,
-    borderRadius: 36,
+    width: 120,
+    height: 120,
+    borderRadius: 40,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1.5,
-    zIndex: 2,
-  },
-  glow: {
-    position: 'absolute',
-    width: 140,
-    height: 140,
-    borderRadius: 70,
-    zIndex: 1,
+    borderWidth: 1,
   },
   title: {
-    color: '#F8FAFC',
+    color: '#FFF',
     fontSize: 28,
     fontWeight: '900',
     letterSpacing: -0.5,
@@ -421,31 +398,33 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   subtitle: {
-    color: 'rgba(248, 250, 252, 0.5)',
-    fontSize: 16,
-    lineHeight: 24,
+    color: 'rgba(255, 255, 255, 0.2)',
+    fontSize: 12,
+    lineHeight: 18,
     textAlign: 'center',
     marginBottom: 40,
+    fontWeight: '700',
+    letterSpacing: 1,
   },
   formContainer: {
     width: '100%',
   },
   inputCard: {
-    backgroundColor: 'rgba(15, 23, 42, 0.8)',
-    borderRadius: 32,
+    backgroundColor: 'rgba(255, 255, 255, 0.01)',
+    borderRadius: 24,
     padding: 24,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.05)',
+    borderColor: 'rgba(255, 255, 255, 0.03)',
   },
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#020617',
+    backgroundColor: '#000',
     height: 64,
-    borderRadius: 20,
+    borderRadius: 14,
     paddingHorizontal: 20,
     marginBottom: 20,
-    borderWidth: 1.5,
+    borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.05)',
   },
   inputIcon: {
@@ -453,7 +432,7 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    color: '#F8FAFC',
+    color: '#FFF',
     fontSize: 16,
     fontWeight: '600',
   },
@@ -462,13 +441,9 @@ const styles = StyleSheet.create({
   },
   btnGradient: {
     height: 64,
-    borderRadius: 20,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.3,
-    shadowRadius: 20,
   },
   btnInner: {
     flexDirection: 'row',
@@ -480,49 +455,45 @@ const styles = StyleSheet.create({
   },
   btnText: {
     color: '#FFF',
-    fontSize: 18,
-    fontWeight: '800',
+    fontSize: 13,
+    fontWeight: '900',
+    letterSpacing: 2,
   },
   privacyBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 24,
+    marginTop: 32,
   },
   privacyText: {
-    color: 'rgba(74, 222, 128, 0.6)',
-    fontSize: 13,
-    fontWeight: '700',
-    marginLeft: 8,
+    color: 'rgba(0, 229, 255, 0.4)',
+    fontSize: 10,
+    fontWeight: '900',
+    marginLeft: 10,
+    letterSpacing: 1.5,
   },
   platformBadgeRow: {
     flexDirection: 'row',
-    marginTop: 40,
+    marginTop: 60,
     justifyContent: 'center',
     flexWrap: 'wrap',
   },
   platformBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.03)',
+    backgroundColor: 'rgba(255,255,255,0.02)',
     paddingHorizontal: 12,
     paddingVertical: 8,
-    borderRadius: 12,
+    borderRadius: 10,
     margin: 6,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.05)',
   },
-  platformBadgeActive: {
-    backgroundColor: 'rgba(99, 102, 241, 0.2)',
-    borderColor: 'rgba(99, 102, 241, 0.4)',
-  },
   platformBadgeText: {
-    color: 'rgba(255,255,255,0.4)',
-    fontSize: 12,
-    fontWeight: '800',
-    marginLeft: 6,
+    color: 'rgba(255,255,255,0.2)',
+    fontSize: 9,
+    fontWeight: '900',
+    marginLeft: 8,
+    letterSpacing: 1,
   },
-  platformBadgeTextActive: {
-    color: '#FFF',
-  }
 });

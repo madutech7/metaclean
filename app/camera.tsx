@@ -19,10 +19,10 @@ export default function SecureCamera() {
   if (!permission.granted) {
     return (
       <View style={styles.permissionContainer}>
-        <Ionicons name="camera-outline" size={64} color="#8E8E93" style={{ marginBottom: 20 }} />
-        <Text style={styles.permissionText}>La caméra &quot;Zéro Trace&quot; nécessite votre autorisation.</Text>
+        <Ionicons name="camera-outline" size={64} color="rgba(255,255,255,0.2)" style={{ marginBottom: 20 }} />
+        <Text style={styles.permissionText}>SECURE CAMERA ACCESS REQUIRED FOR ZERO TRACE OPERATION.</Text>
         <TouchableOpacity style={styles.permissionButton} onPress={requestPermission}>
-          <Text style={styles.permissionBtnText}>Autoriser la caméra</Text>
+          <Text style={styles.permissionBtnText}>GRANT ACCESS</Text>
         </TouchableOpacity>
       </View>
     );
@@ -37,7 +37,6 @@ export default function SecureCamera() {
     if (cameraRef.current) {
       if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
       try {
-        // Appareil photo sécurisé : EXIF = false, pas de position GPS par défaut.
         const photo = await cameraRef.current.takePictureAsync({
             exif: false, 
             quality: 1
@@ -54,7 +53,7 @@ export default function SecureCamera() {
            router.back();
         }
       } catch (e) {
-        console.error("Erreur Caméra", e);
+        console.error("Camera Error", e);
       }
     }
   };
@@ -67,16 +66,16 @@ export default function SecureCamera() {
       <SafeAreaView style={styles.overlay}>
         <View style={styles.topBar}>
           <TouchableOpacity style={styles.iconButton} onPress={() => router.back()}>
-             <Ionicons name="close" size={28} color="white" />
+             <Ionicons name="close" size={24} color="white" />
           </TouchableOpacity>
           
           <View style={styles.secureBadge}>
-             <Ionicons name="shield-checkmark" size={14} color="#30D158" style={{ marginRight: 6 }} />
-             <Text style={styles.secureText}>Zéro Trace</Text>
+             <Ionicons name="shield-checkmark-outline" size={12} color="#00E5FF" style={{ marginRight: 6 }} />
+             <Text style={styles.secureText}>PROTOCOL: ZERO TRACE</Text>
           </View>
 
           <TouchableOpacity style={styles.iconButton} onPress={toggleCameraFacing}>
-             <Ionicons name="camera-reverse-outline" size={28} color="white" />
+             <Ionicons name="camera-reverse-outline" size={24} color="white" />
           </TouchableOpacity>
         </View>
 
@@ -93,32 +92,37 @@ export default function SecureCamera() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'black'
+    backgroundColor: '#050505'
   },
   permissionContainer: {
     flex: 1,
-    backgroundColor: '#000',
+    backgroundColor: '#050505',
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 30,
+    padding: 40,
   },
   permissionText: {
-    color: '#FFFFFF',
-    fontSize: 18,
+    color: 'rgba(255,255,255,0.4)',
+    fontSize: 12,
     textAlign: 'center',
-    marginBottom: 30,
-    lineHeight: 26,
+    marginBottom: 40,
+    fontWeight: '900',
+    letterSpacing: 2,
+    lineHeight: 20,
   },
   permissionButton: {
-    backgroundColor: '#0A84FF',
-    paddingVertical: 14,
-    paddingHorizontal: 24,
-    borderRadius: 12,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    paddingVertical: 18,
+    paddingHorizontal: 40,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
   },
   permissionBtnText: {
-    color: '#FFF',
-    fontSize: 16,
-    fontWeight: '600',
+    color: '#00E5FF',
+    fontSize: 13,
+    fontWeight: '900',
+    letterSpacing: 2,
   },
   camera: {
     flex: 1,
@@ -132,45 +136,48 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 20,
+    paddingHorizontal: 24,
     paddingTop: Platform.OS === 'android' ? 40 : 10,
   },
   iconButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 48,
+    height: 48,
+    borderRadius: 16,
     backgroundColor: 'rgba(0,0,0,0.4)',
     justifyContent: 'center',
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
   },
   secureBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: 'rgba(0,0,0,0.6)',
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 20,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 12,
     borderWidth: 1,
-    borderColor: 'rgba(48, 209, 88, 0.3)',
+    borderColor: 'rgba(0, 229, 255, 0.2)',
   },
   secureText: {
-    color: '#30D158',
-    fontSize: 14,
-    fontWeight: '600',
-    textTransform: 'uppercase',
-    letterSpacing: 1,
+    color: '#00E5FF',
+    fontSize: 9,
+    fontWeight: '900',
+    letterSpacing: 2.5,
   },
   bottomBar: {
     alignItems: 'center',
-    paddingBottom: 40,
+    paddingBottom: 60,
   },
   captureButton: {
-      width: 80,
-      height: 80,
-      borderRadius: 40,
-      backgroundColor: 'rgba(255,255,255,0.3)',
+      width: 84,
+      height: 84,
+      borderRadius: 42,
+      backgroundColor: 'rgba(255,255,255,0.15)',
       justifyContent: 'center',
       alignItems: 'center',
+      borderWidth: 2,
+      borderColor: 'rgba(255,255,255,0.3)',
   },
   captureInner: {
       width: 66,

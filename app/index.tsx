@@ -82,8 +82,8 @@ const TouchableScale = ({ onPress, children, style, disabled = false }: any) => 
 // --- COMPONENTS ---
 const MetadataToggle = ({ label, icon: Icon, isActive, onToggle }: any) => (
   <TouchableScale onPress={onToggle} style={styles.toggleBtn}>
-    <BlurView intensity={15} tint="light" style={[styles.toggleBlur, isActive && styles.toggleBlurActive]}>
-      <Icon size={16} color={isActive ? "#6366F1" : "rgba(255,255,255,0.4)"} />
+    <BlurView intensity={10} tint="light" style={[styles.toggleBlur, isActive && styles.toggleBlurActive]}>
+      <Icon size={14} color={isActive ? "#00E5FF" : "rgba(255,255,255,0.2)"} strokeWidth={2.5} />
       <Text style={[styles.toggleLabel, isActive && styles.toggleLabelActive]}>{label}</Text>
     </BlurView>
   </TouchableScale>
@@ -94,9 +94,9 @@ const ImageCard = ({ item, index, onRemove, onInspect, isProcessing }: any) => {
 
   return (
     <MotiView
-      from={{ opacity: 0, scale: 0.8, translateY: 30 }}
+      from={{ opacity: 0, scale: 0.9, translateY: 20 }}
       animate={{ opacity: 1, scale: 1, translateY: 0 }}
-      transition={{ type: 'spring', delay: index * 50 }}
+      transition={{ type: 'spring', delay: index * 40 }}
       style={styles.imageCardWrapper}
     >
       <TouchableScale style={styles.imageCardContainer} onPress={() => onInspect(item)}>
@@ -104,36 +104,33 @@ const ImageCard = ({ item, index, onRemove, onInspect, isProcessing }: any) => {
           <Image source={{ uri: item.uri }} style={styles.image} />
           
           <LinearGradient
-            colors={['rgba(0,0,0,0.6)', 'transparent', 'rgba(0,0,0,0.4)']}
+            colors={['rgba(0,0,0,0.5)', 'transparent', 'rgba(0,0,0,0.6)']}
             style={StyleSheet.absoluteFill}
           />
 
           {!isProcessing && (
             <TouchableScale 
               style={styles.removeBtn} 
-              onPress={(e: any) => {
+              onPress={() => {
                 if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                 onRemove(item.uri);
               }}
             >
-              <BlurView intensity={30} tint="dark" style={styles.removeBtnBlur}>
-                <Trash2 size={16} color="#FF4B4B" />
+              <BlurView intensity={20} tint="dark" style={styles.removeBtnBlur}>
+                <Trash2 size={14} color="#FF5252" />
               </BlurView>
             </TouchableScale>
           )}
 
           {hasGPS && (
             <View style={styles.dangerBadge}>
-              <ShieldAlert size={12} color="#FFF" />
-              <Text style={styles.dangerText}>GPS</Text>
+              <ShieldAlert size={10} color="#FFF" />
+              <Text style={styles.dangerText}>GPS DETECTED</Text>
             </View>
           )}
 
           <View style={styles.cardInfoLayer}>
-            <View style={styles.cardInfoRow}>
-              <Info size={14} color="rgba(255,255,255,0.7)" />
-              <Text style={styles.cardInfoLabel}>Détails</Text>
-            </View>
+             <Info size={12} color="rgba(255,255,255,0.4)" />
           </View>
         </View>
       </TouchableScale>
@@ -168,13 +165,13 @@ export default function Index() {
   const progressAnim = useRef(new Animated.Value(0)).current;
 
   const getPrivacyRisk = () => {
-    if (images.length === 0) return { label: 'SÉCURISÉ', color: '#4ADE80', score: 100 };
+    if (images.length === 0) return { label: 'CLEAN', color: '#00E5FF', score: 100 };
     const hasGPS = images.some(img => img.exif?.GPSLatitude);
     const hasDevice = images.some(img => img.exif?.Model);
     
-    if (hasGPS) return { label: 'RISQUE ÉLEVÉ', color: '#FB7185', score: 30 };
-    if (hasDevice) return { label: 'RISQUE MOYEN', color: '#FACC15', score: 65 };
-    return { label: 'RISQUE FAIBLE', color: '#818CF8', score: 90 };
+    if (hasGPS) return { label: 'CRITICAL RISK', color: '#FF5252', score: 30 };
+    if (hasDevice) return { label: 'MODERATE RISK', color: '#FFD740', score: 65 };
+    return { label: 'LOW RISK', color: '#00E5FF', score: 90 };
   };
 
   const risk = getPrivacyRisk();
@@ -347,41 +344,25 @@ export default function Index() {
   return (
     <View style={styles.mainContainer}>
       <StatusBar style="light" />
-      
-      <LinearGradient 
-        colors={['#020617', '#0F172A', '#1E293B']} 
-        style={StyleSheet.absoluteFill}
-      />
-
-      {/* AMBIENT GLOWS */}
-      <View style={[styles.glow, { top: -100, right: -100, backgroundColor: 'rgba(99, 102, 241, 0.15)' }]} />
-      <View style={[styles.glow, { bottom: -100, left: -200, backgroundColor: 'rgba(236, 72, 153, 0.1)' }]} />
+      <View style={StyleSheet.absoluteFill}><View style={{flex: 1, backgroundColor: '#050505'}} /></View>
 
       <SafeAreaView style={styles.safeArea} edges={['top']}>
-        {/* TOP BAR / NAVIGATION */}
         <View style={styles.topNav}>
           <View>
             <MotiText 
-              from={{ opacity: 0, translateX: -20 }}
-              animate={{ opacity: 1, translateX: 0 }}
+              from={{ opacity: 0, letterSpacing: 10 } as any}
+              animate={{ opacity: 1, letterSpacing: 3 } as any}
               style={styles.navSubtitle}
             >
-              MODE PROFESSIONNEL
+              PROTOCOL: ZERO TRACE
             </MotiText>
-            <MotiText 
-              from={{ opacity: 0, translateX: -20 }}
-              animate={{ opacity: 1, translateX: 0 }}
-              transition={{ delay: 100 }}
-              style={styles.navTitle}
-            >
-              MetaClean
-            </MotiText>
+            <MotiText style={styles.navTitle}>METACLEAN PRO</MotiText>
           </View>
           
           <View style={styles.topActions}>
             <TouchableScale onPress={() => router.push('/extractor' as any)} style={styles.navActionBtn}>
               <BlurView intensity={20} tint="light" style={styles.navActionBlur}>
-                <Zap size={22} color="#FACC15" fill="#FACC15" />
+                <Zap size={22} color="#00E5FF" fill="#00E5FF" />
               </BlurView>
             </TouchableScale>
             <TouchableScale onPress={() => setShowSettings(true)} style={[styles.navActionBtn, { marginLeft: 12 }]}>
@@ -399,73 +380,67 @@ export default function Index() {
         >
           {/* PRIVACY RISK INDICATOR */}
           <MotiView 
-            animate={{ backgroundColor: `${risk.color}15` }}
+            animate={{ borderColor: `${risk.color}30`, backgroundColor: `${risk.color}05` }}
             style={styles.riskIndicator}
           >
              <View style={[styles.riskDot, { backgroundColor: risk.color }]} />
              <Text style={[styles.riskLabel, { color: risk.color }]}>{risk.label}</Text>
-             <Text style={styles.riskSub}>Analyse de la sélection en cours...</Text>
+             <Text style={styles.riskSub}>SCANNING METADATA STREAMS...</Text>
           </MotiView>
 
           {/* ENHANCED STATS DASHBOARD */}
           <MotiView 
-            from={{ opacity: 0, translateY: 20 }}
+            from={{ opacity: 0, translateY: 10 }}
             animate={{ opacity: 1, translateY: 0 }}
-            transition={{ delay: 200 }}
             style={styles.statsSection}
           >
-            <StatCard title="Fichiers" value={stats.filesCleaned} icon="shield" color="#6366F1" delay={300} />
-            <StatCard title="GPS Bloqués" value={stats.gpsTracesRemoved} icon="map-pin" color="#FB7185" delay={400} />
-            <StatCard title="Poids Protégé" value={`${Math.round(stats.totalSizeCleanedMB)} MB`} icon="zap" color="#FACC15" delay={500} />
+            <StatCard title="FILES PROTECTED" value={stats.filesCleaned} icon="shield" color="#00E5FF" delay={100} />
+            <StatCard title="GPS BLOCKED" value={stats.gpsTracesRemoved} icon="map-pin" color="#FF5252" delay={200} />
+            <StatCard title="SIZE PURGED" value={`${Math.round(stats.totalSizeCleanedMB)} MB`} icon="zap" color="#FFD740" delay={300} />
           </MotiView>
 
           {/* METADATA CONTROLS */}
           <View style={styles.controlHeader}>
-            <Text style={styles.gridHeaderText}>PARAMÈTRES DE PURIFICATION</Text>
+            <Text style={styles.gridHeaderText}>SECURITY PROTOCOLS</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.toggleRow}>
               <MetadataToggle label="GPS" icon={MapPin} isActive={stripGPS} onToggle={() => setStripGPS(!stripGPS)} />
-              <MetadataToggle label="Appareil" icon={Info} isActive={stripDevice} onToggle={() => setStripDevice(!stripDevice)} />
-              <MetadataToggle label="Audio" icon={Music} isActive={stripAudio} onToggle={() => setStripAudio(!stripAudio)} />
-              <MetadataToggle label="Compresser" icon={Zap} isActive={compressVideo} onToggle={() => setCompressVideo(!compressVideo)} />
-              <MetadataToggle label="Anonymiser" icon={ShieldCheck} isActive={scrambleName} onToggle={() => setScrambleName(!scrambleName)} />
-              <MetadataToggle label="Tout Effacer" icon={ShieldAlert} isActive={stripAll} onToggle={() => setStripAll(!stripAll)} />
+              <MetadataToggle label="HARDWARE" icon={Info} isActive={stripDevice} onToggle={() => setStripDevice(!stripDevice)} />
+              <MetadataToggle label="AUDIO" icon={Music} isActive={stripAudio} onToggle={() => setStripAudio(!stripAudio)} />
+              <MetadataToggle label="HEVC" icon={Zap} isActive={compressVideo} onToggle={() => setCompressVideo(!compressVideo)} />
+              <MetadataToggle label="ANONYM" icon={ShieldCheck} isActive={scrambleName} onToggle={() => setScrambleName(!scrambleName)} />
+              <MetadataToggle label="FULL SCRUB" icon={ShieldAlert} isActive={stripAll} onToggle={() => setStripAll(!stripAll)} />
             </ScrollView>
           </View>
 
-          {/* MAIN GRID HEADER */}
           <View style={styles.gridHeader}>
-            <Text style={styles.gridHeaderText}>MA SÉLECTION</Text>
+            <Text style={styles.gridHeaderText}>MEDIA BUFFER</Text>
             {images.length > 0 && (
                <TouchableScale onPress={() => setImages([])}>
-                 <Text style={styles.clearText}>TOUT EFFACER</Text>
+                 <Text style={styles.clearText}>PURGE BUFFER</Text>
                </TouchableScale>
             )}
           </View>
 
           {images.length === 0 ? (
             <MotiView 
-              from={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 500 }}
+              from={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
               style={styles.emptyContainer}
             >
               <View style={styles.emptyIllustrationCard}>
-                <LinearGradient
-                  colors={['rgba(99, 102, 241, 0.2)', 'rgba(99, 102, 241, 0.05)']}
-                  style={styles.emptyIconGradient}
-                >
-                  <Sparkles size={48} color="#818CF8" strokeWidth={1.5} />
-                </LinearGradient>
-                <Text style={styles.emptyTextTitle}>Aucune photo</Text>
-                <Text style={styles.emptyTextSub}>Sélectionnez des fichiers pour retirer leurs méta-données avant de les partager.</Text>
+                <View style={styles.emptyIconGradient}>
+                   <ShieldCheck size={40} color="#333" strokeWidth={1} />
+                </View>
+                <Text style={styles.emptyTextTitle}>SECURE VAULT EMPTY</Text>
+                <Text style={styles.emptyTextSub}>SELECT UP TO 50 ASSETS TO INITIATE PROTOCOL.</Text>
                 
                 <TouchableScale onPress={pickImages} style={styles.mainPickBtn}>
                   <LinearGradient
-                    colors={['#6366F1', '#4338CA']}
+                    colors={['#111', '#000']}
                     style={styles.mainPickGradient}
                   >
-                    <Plus size={24} color="#FFF" style={{ marginRight: 12 }} />
-                    <Text style={styles.mainPickText}>Importer des fichiers</Text>
+                    <Plus size={20} color="#00E5FF" style={{ marginRight: 12 }} />
+                    <Text style={styles.mainPickText}>IMPORT SESSION</Text>
                   </LinearGradient>
                 </TouchableScale>
               </View>
@@ -486,7 +461,7 @@ export default function Index() {
               {!isProcessing && (
                 <TouchableScale onPress={pickImages} style={styles.addMoreWrapper}>
                   <View style={styles.addMoreInner}>
-                    <Plus size={32} color="rgba(255,255,255,0.2)" />
+                    <Plus size={24} color="rgba(255,255,255,0.1)" />
                   </View>
                 </TouchableScale>
               )}
@@ -500,27 +475,26 @@ export default function Index() {
         <AnimatePresence>
           {images.length > 0 && (
             <MotiView 
-              from={{ opacity: 0, translateY: 100 }}
+              from={{ opacity: 0, translateY: 50 }}
               animate={{ opacity: 1, translateY: 0 }}
-              exit={{ opacity: 0, translateY: 100 }}
+              exit={{ opacity: 0, translateY: 50 }}
               style={styles.floatingFooter}
             >
-              <BlurView intensity={40} tint="dark" style={styles.footerBlur}>
+              <BlurView intensity={80} tint="dark" style={styles.footerBlur}>
                 <View style={styles.footerInfo}>
                   <View style={styles.selectionCount}>
                     <Text style={styles.countNumber}>{images.length}</Text>
-                    <Text style={styles.countLabel}>{images.length > 1 ? 'Fichiers' : 'Fichier'}</Text>
+                    <Text style={styles.countLabel}>ASSETS</Text>
                   </View>
                   
                   {isProcessing ? (
                     <View style={styles.progressLabel}>
-                      <ActivityIndicator size="small" color="#6366F1" style={{ marginRight: 8 }} />
+                      <ActivityIndicator size="small" color="#00E5FF" style={{ marginRight: 8 }} />
                       <Text style={styles.progressText}>{Math.round((progress / images.length) * 100)}%</Text>
                     </View>
                   ) : (
                     <View style={styles.readyBadge}>
-                      <Zap size={14} color="#FACC15" fill="#FACC15" style={{ marginRight: 6 }} />
-                      <Text style={styles.readyText}>PRÊT</Text>
+                      <Text style={styles.readyText}>READY</Text>
                     </View>
                   )}
                 </View>
@@ -531,25 +505,20 @@ export default function Index() {
                   style={styles.mainActionBtn}
                 >
                   <LinearGradient
-                    colors={isProcessing ? ['#1E293B', '#334155'] : ['#818CF8', '#6366F1']}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 0 }}
+                    colors={isProcessing ? ['#111', '#050505'] : ['#00E5FF', '#0097A7']}
                     style={styles.actionGradient}
                   >
                     {isProcessing ? (
-                      <Text style={styles.actionText}>Purification {progress}/{images.length}</Text>
+                      <Text style={styles.actionText}>SCRUBBING {progress}/{images.length}</Text>
                     ) : (
-                      <>
-                        <ShieldCheck size={22} color="#FFF" style={{ marginRight: 10 }} />
-                        <Text style={styles.actionText}>Purifier & Sauvegarder</Text>
-                      </>
+                      <Text style={styles.actionText}>INITIATE SCRUB</Text>
                     )}
                   </LinearGradient>
                 </TouchableScale>
 
                 {isProcessing && (
                   <View style={styles.footerProgressBarContainer}>
-                    <Animated.View style={[styles.footerProgressBarFill, { width: progressBarWidth }]} />
+                    <Animated.View style={[styles.footerProgressBarFill, { width: progressBarWidth, backgroundColor: '#00E5FF' }]} />
                   </View>
                 )}
               </BlurView>
@@ -565,39 +534,40 @@ export default function Index() {
 
         {/* SETTINGS MODAL */}
         <Modal visible={showSettings} transparent animationType="fade">
-           <BlurView intensity={60} tint="dark" style={styles.modalOverlay}>
+           <BlurView intensity={100} tint="dark" style={styles.modalOverlay}>
               <MotiView 
-                from={{ scale: 0.9, opacity: 0 }}
+                from={{ scale: 0.95, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 style={styles.settingsCard}
               >
-                 <Text style={styles.settingsTitle}>PARAMÈTRES PRO</Text>
+                 <Text style={styles.settingsTitle}>SYSTEM SETTINGS</Text>
                  
                  <View style={styles.settingItem}>
-                    <Text style={styles.settingText}>Suppression Auto (Originaux)</Text>
+                    <Text style={styles.settingText}>AUTO-DESTRUCT ORIGINALS</Text>
                     <Switch 
                         value={autoDelete} 
                         onValueChange={setAutoDelete}
-                        trackColor={{ false: '#1E293B', true: '#6366F1' }}
+                        thumbColor="#00E5FF"
+                        trackColor={{ false: '#111', true: '#004D40' }}
                     />
                  </View>
 
                  <TouchableScale 
                     onPress={async () => {
                         await deleteAsync(cacheDirectory || '', { idempotent: true });
-                        Alert.alert('Nettoyage', 'Cache de l\'application vidé.');
+                        if (Platform.OS !== 'web') Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
                     }}
                     style={styles.cacheBtn}
                  >
-                    <Text style={styles.cacheBtnText}>Vider le Cache (Sécurité)</Text>
+                    <Text style={styles.cacheBtnText}>PURGE CACHE STREAMS</Text>
                  </TouchableScale>
 
                  <TouchableScale onPress={() => router.push('/camera' as any)} style={styles.cameraBtn}>
-                    <Text style={styles.cameraBtnText}>Ouvrir Caméra Zéro Trace</Text>
+                    <Text style={styles.cameraBtnText}>ACCESS SECURE CAMERA</Text>
                  </TouchableScale>
 
                  <TouchableOpacity onPress={() => setShowSettings(false)} style={styles.closeSettings}>
-                    <Text style={styles.closeSettingsText}>FERMER</Text>
+                    <Text style={styles.closeSettingsText}>DISMISS</Text>
                  </TouchableOpacity>
               </MotiView>
            </BlurView>
@@ -610,366 +580,63 @@ export default function Index() {
 const styles = StyleSheet.create({
   mainContainer: {
     flex: 1,
-    backgroundColor: '#020617',
+    backgroundColor: '#050505',
   },
   safeArea: {
     flex: 1,
   },
-  glow: {
-    position: 'absolute',
-    width: 400,
-    height: 400,
-    borderRadius: 200,
-    opacity: 0.6,
-  },
   topNav: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
+    alignItems: 'center',
     paddingHorizontal: 24,
-    paddingVertical: 16,
-  },
-  navSubtitle: {
-    color: '#6366F1',
-    fontSize: 10,
-    fontWeight: '900',
-    letterSpacing: 2.5,
+    height: 70,
   },
   navTitle: {
-    color: '#F8FAFC',
-    fontSize: 28,
+    color: '#FFF',
+    fontSize: 20,
     fontWeight: '900',
-    letterSpacing: -1,
-    marginTop: 2,
+    letterSpacing: -0.5,
+  },
+  navSubtitle: {
+    color: '#00E5FF',
+    fontSize: 10,
+    fontWeight: '900',
+    letterSpacing: 3,
+    marginBottom: 2,
   },
   topActions: {
     flexDirection: 'row',
   },
   navActionBtn: {
-    width: 48,
-    height: 48,
-    borderRadius: 16,
+    width: 46,
+    height: 46,
+    borderRadius: 14,
     overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
   },
   navActionBlur: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.05)',
   },
   scrollContainer: {
-    paddingBottom: 100,
-  },
-  statsSection: {
-    flexDirection: 'row',
-    paddingHorizontal: 18,
-    paddingTop: 10,
-    marginBottom: 10,
-  },
-  gridHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 24,
-    paddingVertical: 20,
-    backgroundColor: '#020617', // Match bg for sticky effect
-  },
-  gridHeaderText: {
-    color: 'rgba(248, 250, 252, 0.4)',
-    fontSize: 12,
-    fontWeight: '900',
-    letterSpacing: 2,
-  },
-  clearText: {
-    color: '#F43F5E',
-    fontSize: 11,
-    fontWeight: '900',
-    letterSpacing: 1,
-  },
-  emptyContainer: {
-    paddingHorizontal: 24,
-    marginTop: 20,
-  },
-  emptyIllustrationCard: {
-    backgroundColor: 'rgba(15, 23, 42, 0.6)',
-    borderRadius: 32,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.05)',
-    padding: 32,
-    alignItems: 'center',
-    textAlign: 'center',
-  },
-  emptyIconGradient: {
-    width: 100,
-    height: 100,
-    borderRadius: 36,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 24,
-  },
-  emptyTextTitle: {
-    color: '#F8FAFC',
-    fontSize: 22,
-    fontWeight: '900',
-    marginBottom: 8,
-  },
-  emptyTextSub: {
-    color: 'rgba(248, 250, 252, 0.4)',
-    fontSize: 15,
-    lineHeight: 22,
-    textAlign: 'center',
-    marginBottom: 32,
-  },
-  mainPickBtn: {
-    width: '100%',
-  },
-  mainPickGradient: {
-    height: 64,
-    borderRadius: 20,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  mainPickText: {
-    color: '#FFF',
-    fontSize: 18,
-    fontWeight: '800',
-  },
-  grid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    paddingHorizontal: SPACING,
-  },
-  imageCardWrapper: {
-    width: IMAGE_SIZE,
-    height: IMAGE_SIZE * 1.3,
-    marginBottom: SPACING,
-    marginRight: SPACING,
-  },
-  imageCardContainer: {
-    flex: 1,
-  },
-  imageCard: {
-    flex: 1,
-    borderRadius: 24,
-    overflow: 'hidden',
-    backgroundColor: '#0F172A',
-    borderWidth: 1.5,
-    borderColor: 'rgba(255,255,255,0.05)',
-  },
-  imageCardProcessing: {
-    opacity: 0.5,
-  },
-  image: {
-    width: '100%',
-    height: '100%',
-    resizeMode: 'cover',
-  },
-  removeBtn: {
-    position: 'absolute',
-    top: 12,
-    right: 12,
-    zIndex: 10,
-  },
-  removeBtnBlur: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-    overflow: 'hidden',
-  },
-  dangerBadge: {
-    position: 'absolute',
-    top: 12,
-    left: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#EF4444',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-    zIndex: 10,
-  },
-  dangerText: {
-    color: '#FFF',
-    fontSize: 10,
-    fontWeight: '900',
-    marginLeft: 4,
-  },
-  cardInfoLayer: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    padding: 12,
-  },
-  cardInfoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  cardInfoLabel: {
-    color: 'rgba(255,255,255,0.7)',
-    fontSize: 11,
-    fontWeight: '700',
-    marginLeft: 6,
-  },
-  addMoreWrapper: {
-    width: IMAGE_SIZE,
-    height: IMAGE_SIZE * 1.3,
-    marginBottom: SPACING,
-  },
-  addMoreInner: {
-    flex: 1,
-    borderRadius: 24,
-    borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.05)',
-    borderStyle: 'dashed',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(255,255,255,0.02)',
-  },
-  floatingFooter: {
-    position: 'absolute',
-    bottom: 30,
-    left: 20,
-    right: 20,
-    zIndex: 100,
-  },
-  footerBlur: {
-    borderRadius: 32,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
-    padding: 24,
-    backgroundColor: 'rgba(15, 23, 42, 0.4)',
-  },
-  footerInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 20,
-  },
-  selectionCount: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-  },
-  countNumber: {
-    color: '#FFF',
-    fontSize: 32,
-    fontWeight: '900',
-    marginRight: 6,
-  },
-  countLabel: {
-    color: 'rgba(248, 250, 252, 0.5)',
-    fontSize: 14,
-    fontWeight: '700',
-  },
-  progressLabel: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  progressText: {
-    color: '#6366F1',
-    fontSize: 16,
-    fontWeight: '900',
-  },
-  readyBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(250, 204, 21, 0.1)',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(250, 204, 21, 0.2)',
-  },
-  readyText: {
-    color: '#FACC15',
-    fontSize: 12,
-    fontWeight: '900',
-    letterSpacing: 1,
-  },
-  mainActionBtn: {
-    width: '100%',
-  },
-  actionGradient: {
-    height: 64,
-    borderRadius: 20,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#6366F1',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.3,
-    shadowRadius: 20,
-  },
-  actionText: {
-    color: '#FFF',
-    fontSize: 18,
-    fontWeight: '800',
-  },
-  footerProgressBarContainer: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: 4,
-    backgroundColor: 'rgba(255,255,255,0.05)',
-  },
-  footerProgressBarFill: {
-    height: '100%',
-    backgroundColor: '#6366F1',
-  },
-  controlHeader: {
-    paddingHorizontal: 24,
-    paddingVertical: 10,
-  },
-  toggleRow: {
-    flexDirection: 'row',
-    marginTop: 12,
-  },
-  toggleBtn: {
-    marginRight: 12,
-  },
-  toggleBlur: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 14,
-    backgroundColor: 'rgba(255,255,255,0.03)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.05)',
-  },
-  toggleBlurActive: {
-    backgroundColor: 'rgba(99, 102, 241, 0.1)',
-    borderColor: 'rgba(99, 102, 241, 0.2)',
-  },
-  toggleLabel: {
-    color: 'rgba(255,255,255,0.4)',
-    fontSize: 13,
-    fontWeight: '700',
-    marginLeft: 8,
-  },
-  toggleLabelActive: {
-    color: '#F8FAFC',
+    paddingBottom: 40,
   },
   riskIndicator: {
     marginHorizontal: 24,
     marginTop: 20,
     padding: 16,
-    borderRadius: 20,
+    borderRadius: 12,
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.05)',
   },
   riskDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+    width: 6,
+    height: 6,
+    borderRadius: 3,
     marginRight: 10,
   },
   riskLabel: {
@@ -979,74 +646,350 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   riskSub: {
+    color: 'rgba(255,255,255,0.2)',
+    fontSize: 10,
+    fontWeight: '700',
+  },
+  statsSection: {
+    flexDirection: 'row',
+    paddingHorizontal: 18,
+    marginTop: 20,
+  },
+  controlHeader: {
+    paddingHorizontal: 24,
+    marginTop: 30,
+  },
+  toggleRow: {
+    flexDirection: 'row',
+    marginTop: 14,
+  },
+  toggleBtn: {
+    marginRight: 12,
+  },
+  toggleBlur: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255,255,255,0.02)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.05)',
+  },
+  toggleBlurActive: {
+    backgroundColor: 'rgba(0, 229, 255, 0.1)',
+    borderColor: 'rgba(0, 229, 255, 0.2)',
+  },
+  toggleLabel: {
     color: 'rgba(255,255,255,0.3)',
     fontSize: 11,
-    fontWeight: '600',
+    fontWeight: '900',
+    marginLeft: 10,
+    letterSpacing: 1,
+  },
+  toggleLabelActive: {
+    color: '#F8FAFC',
+  },
+  gridHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+    marginTop: 40,
+    marginBottom: 20,
+  },
+  gridHeaderText: {
+    color: 'rgba(255,255,255,0.3)',
+    fontSize: 10,
+    fontWeight: '900',
+    letterSpacing: 2,
+  },
+  clearText: {
+    color: '#FF5252',
+    fontSize: 10,
+    fontWeight: '900',
+    letterSpacing: 1,
+  },
+  emptyContainer: {
+    paddingHorizontal: 24,
+    alignItems: 'center',
+  },
+  emptyIllustrationCard: {
+    width: '100%',
+    backgroundColor: 'rgba(255,255,255,0.01)',
+    borderRadius: 24,
+    padding: 40,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.03)',
+  },
+  emptyIconGradient: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 24,
+  },
+  emptyTextTitle: {
+    color: '#FFF',
+    fontSize: 18,
+    fontWeight: '900',
+    letterSpacing: 1,
+    marginBottom: 8,
+  },
+  emptyTextSub: {
+    color: 'rgba(255,255,255,0.2)',
+    fontSize: 11,
+    textAlign: 'center',
+    fontWeight: '700',
+    marginBottom: 32,
+    letterSpacing: 0.5,
+  },
+  mainPickBtn: {
+    width: '100%',
+  },
+  mainPickGradient: {
+    height: 60,
+    borderRadius: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.05)',
+  },
+  mainPickText: {
+    color: '#FFF',
+    fontSize: 13,
+    fontWeight: '900',
+    letterSpacing: 2,
+  },
+  grid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    paddingHorizontal: 12,
+  },
+  imageCardWrapper: {
+    width: '33.33%',
+    padding: 6,
+  },
+  imageCardContainer: {
+    aspectRatio: 1,
+  },
+  imageCard: {
+    flex: 1,
+    borderRadius: 12,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.05)',
+  },
+  imageCardProcessing: {
+    opacity: 0.5,
+  },
+  image: {
+    flex: 1,
+  },
+  removeBtn: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    zIndex: 10,
+  },
+  removeBtnBlur: {
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  dangerBadge: {
+    position: 'absolute',
+    top: 8,
+    left: 8,
+    backgroundColor: '#FF5252',
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 6,
+    paddingVertical: 3,
+    borderRadius: 4,
+  },
+  dangerText: {
+    color: 'white',
+    fontSize: 7,
+    fontWeight: '900',
+    marginLeft: 4,
+  },
+  cardInfoLayer: {
+    position: 'absolute',
+    bottom: 8,
+    right: 8,
+  },
+  addMoreWrapper: {
+    width: '33.33%',
+    padding: 6,
+  },
+  addMoreInner: {
+    aspectRatio: 1,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderStyle: 'dashed',
+    borderColor: 'rgba(255,255,255,0.05)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255,255,255,0.01)',
+  },
+  floatingFooter: {
+    position: 'absolute',
+    bottom: 30,
+    left: 20,
+    right: 20,
+    zIndex: 100,
+  },
+  footerBlur: {
+    padding: 20,
+    borderRadius: 24,
+    flexDirection: 'row',
+    alignItems: 'center',
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+  },
+  footerInfo: {
+    flex: 1,
+  },
+  selectionCount: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+  },
+  countNumber: {
+    color: '#FFF',
+    fontSize: 24,
+    fontWeight: '900',
+  },
+  countLabel: {
+    color: 'rgba(255,255,255,0.3)',
+    fontSize: 10,
+    fontWeight: '900',
+    marginLeft: 6,
+    letterSpacing: 1,
+  },
+  readyBadge: {
+    marginTop: 4,
+  },
+  readyText: {
+    color: '#00E5FF',
+    fontSize: 9,
+    fontWeight: '900',
+    letterSpacing: 2,
+  },
+  progressLabel: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  progressText: {
+    color: '#FFF',
+    fontSize: 12,
+    fontWeight: '800',
+  },
+  mainActionBtn: {
+    width: 160,
+  },
+  actionGradient: {
+    height: 54,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  actionText: {
+    color: '#FFF',
+    fontSize: 12,
+    fontWeight: '900',
+    letterSpacing: 1.5,
+  },
+  footerProgressBarContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 2,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+  },
+  footerProgressBarFill: {
+    height: '100%',
   },
   modalOverlay: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 30,
+    padding: 24,
   },
   settingsCard: {
     width: '100%',
-    backgroundColor: '#0F172A',
+    backgroundColor: '#050505',
     borderRadius: 32,
-    padding: 30,
+    padding: 40,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
+    borderColor: 'rgba(255,255,255,0.05)',
   },
   settingsTitle: {
     color: '#FFF',
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '900',
-    letterSpacing: 2,
-    marginBottom: 30,
+    letterSpacing: 3,
+    marginBottom: 40,
     textAlign: 'center',
   },
   settingItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 24,
+    marginBottom: 32,
   },
   settingText: {
-    color: 'rgba(255,255,255,0.8)',
-    fontSize: 15,
-    fontWeight: '600',
+    color: 'rgba(255,255,255,0.5)',
+    fontSize: 12,
+    fontWeight: '900',
+    letterSpacing: 1,
   },
   cacheBtn: {
-    backgroundColor: 'rgba(255,75,75,0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,82,82,0.2)',
     padding: 16,
     borderRadius: 16,
     alignItems: 'center',
     marginTop: 10,
   },
   cacheBtnText: {
-    color: '#FF4B4B',
-    fontWeight: '800',
-    fontSize: 13,
+    color: '#FF5252',
+    fontWeight: '900',
+    fontSize: 11,
+    letterSpacing: 1,
   },
   cameraBtn: {
-    backgroundColor: 'rgba(99, 102, 241, 0.1)',
+    backgroundColor: 'rgba(255,255,255,0.02)',
     padding: 16,
     borderRadius: 16,
     alignItems: 'center',
     marginTop: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.05)',
   },
   cameraBtnText: {
-    color: '#818CF8',
-    fontWeight: '800',
-    fontSize: 13,
+    color: '#00E5FF',
+    fontWeight: '900',
+    fontSize: 11,
+    letterSpacing: 1,
   },
   closeSettings: {
-    marginTop: 30,
+    marginTop: 40,
     alignItems: 'center',
   },
   closeSettingsText: {
-    color: 'rgba(255,255,255,0.3)',
-    fontSize: 12,
+    color: 'rgba(255,255,255,0.2)',
+    fontSize: 10,
     fontWeight: '900',
     letterSpacing: 2,
   }
