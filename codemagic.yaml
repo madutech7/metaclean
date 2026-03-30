@@ -21,28 +21,19 @@ workflows:
           ls -la ios/ || echo "WARNING: ios directory not found!"
       - name: Fix FFmpeg 404
         script: |
+          echo "Patching node_modules podspecs to use ffmpeg-kit-ios-full..."
+          find node_modules/ffmpeg-kit-react-native -name "*.podspec" -exec sed -i '' "s/ffmpeg-kit-ios-https/ffmpeg-kit-ios-full/g" {} +
+          
           cd ios
-          echo "Generating local podspec for FFmpeg to bypass 404..."
-          cat <<EOF > ffmpeg-kit-ios-https.podspec
-          Pod::Spec.new do |s|
-            s.name             = 'ffmpeg-kit-ios-https'
-            s.version          = '6.0'
-            s.summary          = 'Mirror of FFmpegKit for iOS'
-            s.homepage         = 'https://github.com/luthviar/ffmpeg-kit-ios-full'
-            s.license          = { :type => 'LGPL-3.0' }
-            s.authors          = { 'Taner Sener' => 'tanersener@gmail.com' }
-            s.platform             = :ios, '12.1'
-            s.source               = { :http => 'https://github.com/luthviar/ffmpeg-kit-ios-full/releases/download/6.0/ffmpeg-kit-ios-full.zip' }
-            s.vendored_frameworks = 'ffmpeg-kit-ios-full/*.xcframework'
-          end
-          EOF
+          echo "Patching Podfile to use luthviar mirror..."
+          # Replace any existing reference in Podfile
+          sed -i '' "s/ffmpeg-kit-ios-https/ffmpeg-kit-ios-full/g" Podfile
           
-          echo "Patching Podfile to use local podspec..."
-          # Inject the pod line at the top of the Podfile
-          sed -i '' "1s/^/pod 'ffmpeg-kit-ios-https', :path => 'ffmpeg-kit-ios-https.podspec'\n/" Podfile
+          # Inject the working mirror at the top
+          sed -i '' "1s/^/pod 'ffmpeg-kit-ios-full', :podspec => 'https:\/\/raw.githubusercontent.com\/luthviar\/ffmpeg-kit-ios-full\/main\/ffmpeg-kit-ios-full.podspec'\n/" Podfile
           
-          echo "Current Podfile content (first 10 lines):"
-          head -n 10 Podfile
+          echo "Current Podfile content (first 15 lines):"
+          head -n 15 Podfile
       - name: Install CocoaPods
         script: |
           cd ios

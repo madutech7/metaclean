@@ -17,28 +17,30 @@ const withFFmpegFix = (config) => {
           if (fs.existsSync(podfilePath)) {
             let podfileContent = fs.readFileSync(podfilePath, 'utf8');
 
-            // Add the local pod definition at the top if it doesn't exist
-            if (!podfileContent.includes('ffmpeg-kit-ios-https')) {
-              console.log('Generating local podspec for FFmpegFix...');
-              const podspecContent = `
-Pod::Spec.new do |s|
-  s.name             = 'ffmpeg-kit-ios-https'
-  s.version          = '6.0'
-  s.summary          = 'Mirror of FFmpegKit for iOS'
-  s.homepage         = 'https://github.com/luthviar/ffmpeg-kit-ios-full'
-  s.license          = { :type => 'LGPL-3.0' }
-  s.authors          = { 'Taner Sener' => 'tanersener@gmail.com' }
-  s.platform         = :ios, '12.1'
-  s.source           = { :http => 'https://github.com/luthviar/ffmpeg-kit-ios-full/releases/download/6.0/ffmpeg-kit-ios-full.zip' }
-  s.vendored_frameworks = 'ffmpeg-kit-ios-full/*.xcframework'
-end
-`;
-              const podspecPath = path.join(config.modRequest.projectRoot, 'ios', 'ffmpeg-kit-ios-https.podspec');
-              fs.writeFileSync(podspecPath, podspecContent);
+            if (!podfileContent.includes('ffmpeg-kit-ios-full')) {
+              console.log('Patching node_modules podspecs to use ffmpeg-kit-ios-full...');
+              // Manually find and replace in the relevant podspecs
+              const nodeModulesPath = path.join(config.modRequest.projectRoot, 'node_modules', 'ffmpeg-kit-react-native');
+              if (fs.existsSync(nodeModulesPath)) {
+                const podspecFiles = fs.readdirSync(nodeModulesPath).filter(file => file.endsWith('.podspec'));
+                podspecFiles.forEach(file => {
+                  const filePath = path.join(nodeModulesPath, file);
+                  let content = fs.readFileSync(filePath, 'utf8');
+                  if (content.includes('ffmpeg-kit-ios-https')) {
+                    content = content.replace(/ffmpeg-kit-ios-https/g, 'ffmpeg-kit-ios-full');
+                    fs.writeFileSync(filePath, content);
+                  }
+                });
+              }
 
               console.log('Patching Podfile for FFmpegFix...');
-              const fix = "\n# FFmpeg Kit 404 Fix\npod 'ffmpeg-kit-ios-https', :path => 'ffmpeg-kit-ios-https.podspec'\n";
+              // Replace any existing reference
+              podfileContent = podfileContent.replace(/ffmpeg-kit-ios-https/g, 'ffmpeg-kit-ios-full');
+
+              // Inject the working mirror at the top
+              const fix = "\n# FFmpeg Kit 404 Fix\npod 'ffmpeg-kit-ios-full', :podspec => 'https://raw.githubusercontent.com/luthviar/ffmpeg-kit-ios-full/main/ffmpeg-kit-ios-full.podspec'\n";
               podfileContent = fix + podfileContent;
+              
               fs.writeFileSync(podfilePath, podfileContent);
             }
           }
