@@ -155,6 +155,9 @@ export default function Index() {
   // Metadata Settings
   const [stripGPS, setStripGPS] = useState(true);
   const [stripDevice, setStripDevice] = useState(true);
+  const [stripAudio, setStripAudio] = useState(false);
+  const [compressVideo, setCompressVideo] = useState(false);
+  const [scrambleName, setScrambleName] = useState(true);
   const [stripAll, setStripAll] = useState(true);
 
   const progressAnim = useRef(new Animated.Value(0)).current;
@@ -236,16 +239,32 @@ export default function Index() {
                    return;
                 }
                 const baseDir = documentDirectory || cacheDirectory || '';
-                const outputUri = `${baseDir}clean_${Date.now()}_${i}.mp4`;
+                const fileName = scrambleName ? `clean_${Math.random().toString(36).substring(7)}` : `clean_${Date.now()}`;
+                const outputUri = `${baseDir}${fileName}_${i}.mp4`;
                 
                 // Smart Script
                 let script = `-i "${file.uri}" `;
+                
+                // Metadata handling
                 if (stripAll) script += `-map_metadata -1 `;
                 else {
                   if (stripGPS) script += `-metadata:s:v:0 location= -metadata location= `;
                   if (stripDevice) script += `-metadata title= -metadata model= `;
                 }
-                script += `-c:v copy -c:a copy "${outputUri}"`;
+
+                // Audio handling
+                if (stripAudio) script += `-an `;
+                else script += `-c:a copy `;
+
+                // Compression handling
+                if (compressVideo) {
+                    // Use H.265 (HEVC) for maximum quality/size ratio if available, fallback to H.264
+                    script += `-c:v libx265 -crf 28 -preset fast `;
+                } else {
+                    script += `-c:v copy `;
+                }
+                
+                script += `"${outputUri}"`;
                 
                 try {
                   const session = await FFmpegKit.execute(script);
@@ -343,9 +362,9 @@ export default function Index() {
           </View>
           
           <View style={styles.topActions}>
-            <TouchableScale onPress={() => router.push('/tiktok')} style={styles.navActionBtn}>
+            <TouchableScale onPress={() => router.push('/extractor')} style={styles.navActionBtn}>
               <BlurView intensity={20} tint="light" style={styles.navActionBlur}>
-                <Music size={22} color="#FFF" />
+                <Zap size={22} color="#FACC15" fill="#FACC15" />
               </BlurView>
             </TouchableScale>
             <TouchableScale onPress={() => router.push('/camera')} style={[styles.navActionBtn, { marginLeft: 12 }]}>
@@ -379,7 +398,10 @@ export default function Index() {
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.toggleRow}>
               <MetadataToggle label="GPS" icon={MapPin} isActive={stripGPS} onToggle={() => setStripGPS(!stripGPS)} />
               <MetadataToggle label="Appareil" icon={Info} isActive={stripDevice} onToggle={() => setStripDevice(!stripDevice)} />
-              <MetadataToggle label="Tout Effacer" icon={ShieldCheck} isActive={stripAll} onToggle={() => setStripAll(!stripAll)} />
+              <MetadataToggle label="Audio" icon={Music} isActive={stripAudio} onToggle={() => setStripAudio(!stripAudio)} />
+              <MetadataToggle label="Compresser" icon={Zap} isActive={compressVideo} onToggle={() => setCompressVideo(!compressVideo)} />
+              <MetadataToggle label="Anonymiser" icon={ShieldCheck} isActive={scrambleName} onToggle={() => setScrambleName(!scrambleName)} />
+              <MetadataToggle label="Tout Effacer" icon={ShieldAlert} isActive={stripAll} onToggle={() => setStripAll(!stripAll)} />
             </ScrollView>
           </View>
 
