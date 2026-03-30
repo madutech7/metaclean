@@ -16,7 +16,7 @@
     "@react-navigation/bottom-tabs": "^7.4.0",
     "@react-navigation/elements": "^2.6.3",
     "@react-navigation/native": "^7.1.8",
-    "@sheehanmunim/react-native-ffmpeg": "^6.0.3",
+    "ffmpeg-kit-react-native": "^6.0.2",
     "expo": "~54.0.33",
     "expo-blur": "~15.0.8",
     "expo-camera": "~17.0.10",

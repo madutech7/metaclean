@@ -44,17 +44,9 @@ import { ExifInspectorModal } from '../components/ExifInspectorModal';
 import { StatCard } from '../components/StatCard';
 import { getPrivacyStats, updatePrivacyStats, PrivacyStats } from '../utils/privacyStats';
 
-let FFmpegKit: any = null;
-let ReturnCode: any = null;
-const isExpoGo = Constants.executionEnvironment === ExecutionEnvironment.StoreClient;
+import { FFmpegKit, ReturnCode, FFmpegKitConfig } from 'ffmpeg-kit-react-native';
 
-if (!isExpoGo) {
-  try {
-    const module = require('@sheehanmunim/react-native-ffmpeg');
-    FFmpegKit = module.FFmpegKit;
-    ReturnCode = module.ReturnCode;
-  } catch (e) {}
-}
+const isExpoGo = Constants.executionEnvironment === ExecutionEnvironment.StoreClient;
 
 const { width } = Dimensions.get('window');
 const SPACING = 20;

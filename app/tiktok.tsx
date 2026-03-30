@@ -38,14 +38,17 @@ import {
 
 let FFmpegKit: any = null;
 let ReturnCode: any = null;
+
 const isExpoGo = Constants.executionEnvironment === ExecutionEnvironment.StoreClient;
 
 if (!isExpoGo) {
   try {
-    const module = require('@sheehanmunim/react-native-ffmpeg');
-    FFmpegKit = module.FFmpegKit;
-    ReturnCode = module.ReturnCode;
-  } catch (e) {}
+    const ffmpegModule = require('ffmpeg-kit-react-native');
+    FFmpegKit = ffmpegModule.FFmpegKit;
+    ReturnCode = ffmpegModule.ReturnCode;
+  } catch (e) {
+    console.error('Failed to load FFmpegKit:', e);
+  }
 }
 
 const { width } = Dimensions.get('window');
